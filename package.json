@@ -14,10 +14,11 @@
     "e-commerce",
     "jewelry"
   ],
-  "author": "",
+  "author": "Abe Reyes <abe.raise@gmail.com>",
   "license": "ISC",
   "devDependencies": {
     "concurrently": "^6.2.0",
+    "cypress": "^13.14.1",
     "eslint": "^9.9.1"
   }
 }

@@ -4,7 +4,10 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/',
     component: () => import('layouts/MainLayout.vue'),
-    children: [{ path: '', component: () => import('pages/IndexPage.vue') }],
+    children: [
+      { path: '', component: () => import('pages/IndexPage.vue') },
+      { path: 'test', component: () => import('pages/TestPage.vue') },
+    ],
   },
 
   // Always leave this as last one,
@@ -16,3 +19,5 @@ const routes: RouteRecordRaw[] = [
 ];
 
 export default routes;
+
+// client/src/router/routes.ts
