@@ -3,8 +3,10 @@ import express, { Request, Response } from 'express';
 import cors from 'cors';
 import mongoose, { Schema, Document } from 'mongoose';
 
+// Load environment variables
 dotenv.config();
 
+// Define the Counter interface and schema
 interface ICounter extends Document {
   value: number;
 }
@@ -15,6 +17,7 @@ const CounterSchema: Schema = new Schema({
 
 const Counter = mongoose.model<ICounter>('Counter', CounterSchema);
 
+// Initialize Express app
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -24,9 +27,16 @@ if (!mongoUri) {
   throw new Error('MONGODB_URI environment variable is not set');
 }
 
-// Enable CORS for all routes
-app.use(cors());
+// Define custom CORS options
+const corsOptions = {
+  origin: 'https://e-commerce-sep-2024.vercel.app', // Allow requests from the Vercel frontend
+  credentials: true, // Allow credentials if needed
+};
 
+// Apply CORS middleware with options
+app.use(cors(corsOptions));
+
+// Define routes
 app.get('/', async (req: Request, res: Response) => {
   try {
     if (mongoose.connection.readyState !== 1) {
@@ -60,7 +70,7 @@ app.get('/count', async (req: Request, res: Response) => {
     res.json({
       count: counter.value,
       message: 'Counter updated successfully and saved to the database',
-    }); // Add message here
+    });
   } catch (error) {
     res.status(500).json({ error: 'Database error' });
   }
@@ -69,7 +79,7 @@ app.get('/count', async (req: Request, res: Response) => {
 // Connect to MongoDB
 async function connectToDatabase() {
   try {
-    await mongoose.connect(mongoUri as string); // Type assertion here
+    await mongoose.connect(mongoUri as string);
     console.log('Connected to MongoDB');
 
     app.listen(PORT, () => {
@@ -83,6 +93,7 @@ async function connectToDatabase() {
 
 connectToDatabase();
 
+// Monitor MongoDB connection
 const db = mongoose.connection;
 db.on('error', console.error.bind(console, 'MongoDB connection error:'));
 db.once('open', function () {
