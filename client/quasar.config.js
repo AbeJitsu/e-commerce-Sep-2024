@@ -34,7 +34,7 @@ module.exports = configure(function (/* ctx */) {
       open: true,
       proxy: {
         '/api': {
-          target: 'http://localhost:3000',
+          target: process.env.VITE_API_URL || 'http://localhost:3000',
           changeOrigin: true,
           pathRewrite: { '^/api': '' },
         },
