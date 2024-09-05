@@ -18,7 +18,7 @@ module.exports = configure(function (/* ctx */) {
       vueRouterMode: 'history',
 
       env: {
-        API: process.env.API_URL || '', // Ensure API is a string
+        API: process.env.VITE_API_URL || '', // Ensure API is a string
       },
 
       vitePlugins: [
