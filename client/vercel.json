@@ -19,7 +19,7 @@
         { "key": "Access-Control-Allow-Credentials", "value": "true" },
         {
           "key": "Access-Control-Allow-Origin",
-          "value": "https://full-stack-connection-kit.vercel.app"
+          "value": "https://e-commerce-sep-2024.vercel.app"
         },
         {
           "key": "Access-Control-Allow-Methods",
