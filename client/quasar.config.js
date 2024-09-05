@@ -1,6 +1,5 @@
-/* eslint-env node */
-
 const { configure } = require('quasar/wrappers');
+const { checker } = require('vite-plugin-checker');
 
 module.exports = configure(function (/* ctx */) {
   return {
@@ -19,22 +18,15 @@ module.exports = configure(function (/* ctx */) {
       vueRouterMode: 'history',
 
       env: {
-        API: process.env.API_URL,
+        API: process.env.API_URL || '', // Ensure API is a string
       },
 
       vitePlugins: [
-        [
-          'vite-plugin-checker',
-          {
-            vueTsc: {
-              tsconfigPath: 'tsconfig.vue-tsc.json',
-            },
-            eslint: {
-              lintCommand: 'eslint "./**/*.{js,ts,mjs,cjs,vue}"',
-            },
+        checker({
+          eslint: {
+            lintCommand: 'eslint "./**/*.{js,ts,mjs,cjs,vue}"',
           },
-          { server: false },
-        ],
+        }),
       ],
     },
 
@@ -57,9 +49,9 @@ module.exports = configure(function (/* ctx */) {
     animations: [],
 
     ssr: {
-      pwa: true,
-      prodPort: 3000,
-      middlewares: ['render'],
+      pwa: true, // Enable PWA takeover
+      prodPort: 3000, // Port for production server
+      middlewares: ['render'], // Specify middlewares
     },
 
     pwa: {
