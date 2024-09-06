@@ -62,7 +62,7 @@ app.get('/', async (req: Request, res: Response) => {
   }
 });
 
-app.get('/count', async (req: Request, res: Response) => {
+app.get('/api/count', async (req: Request, res: Response) => {
   try {
     let counter = await Counter.findOne();
     if (!counter) {

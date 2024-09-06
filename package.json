@@ -7,7 +7,7 @@
     "server": "cd server && npm run dev",
     "dev": "concurrently \"npm run server\" \"npm run client\"",
     "install:all": "npm install && cd client && npm install && cd ../server && npm install",
-    "project-tree": "tree -L 9 -I 'node_modules|.git|package-lock.json' --noreport -a"
+    "project-tree": "tree -L 9 -I 'node_modules|.git|package-lock.json|dist|.DS_Store' --noreport -a"
   },
   "keywords": [
     "monorepo",

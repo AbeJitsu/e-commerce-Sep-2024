@@ -64,22 +64,21 @@ app.get('/', async (req, res) => {
         });
     }
 });
-app.get('/count', async (req, res) => {
-    try {
-        let counter = await Counter.findOne();
-        if (!counter) {
-            counter = new Counter({ value: 0 });
-        }
-        counter.value += 1;
-        await counter.save();
-        res.json({
-            count: counter.value,
-            message: 'Counter updated successfully and saved to the database',
-        }); // Add message here
+app.get('/api/count', async (req, res) => {
+  try {
+    let counter = await Counter.findOne();
+    if (!counter) {
+      counter = new Counter({ value: 0 });
     }
-    catch (error) {
-        res.status(500).json({ error: 'Database error' });
-    }
+    counter.value += 1;
+    await counter.save();
+    res.json({
+      count: counter.value,
+      message: 'Counter updated successfully and saved to the database',
+    }); // Add message here
+  } catch (error) {
+    res.status(500).json({ error: 'Database error' });
+  }
 });
 // Connect to MongoDB
 async function connectToDatabase() {
