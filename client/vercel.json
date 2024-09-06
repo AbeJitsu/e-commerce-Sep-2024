@@ -10,7 +10,7 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "https://server-e-com-sep-2024.herokuapp.com/api/$1"
+      "destination": "https://server-e-com-sep-2024-c802c581b4de.herokuapp.com/api/$1"
     },
     { "source": "/(.*)", "destination": "/index.html" }
   ],

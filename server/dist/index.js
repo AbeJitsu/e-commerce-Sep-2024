@@ -30,11 +30,13 @@ const dotenv_1 = __importDefault(require("dotenv"));
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const mongoose_1 = __importStar(require("mongoose"));
+// Load environment variables
 dotenv_1.default.config();
 const CounterSchema = new mongoose_1.Schema({
     value: Number,
 });
 const Counter = mongoose_1.default.model('Counter', CounterSchema);
+// Initialize Express app
 const app = (0, express_1.default)();
 const PORT = process.env.PORT || 3000;
 // Ensure MONGODB_URI is defined
@@ -42,8 +44,16 @@ const mongoUri = process.env.MONGODB_URI;
 if (!mongoUri) {
     throw new Error('MONGODB_URI environment variable is not set');
 }
-// Enable CORS for all routes
-app.use((0, cors_1.default)());
+// Define custom CORS options
+const corsOptions = {
+    origin: 'https://e-commerce-sep-2024.vercel.app', // Allow requests from the Vercel frontend
+    credentials: true, // Allow credentials if needed
+};
+// Apply CORS middleware with options
+app.use((0, cors_1.default)(corsOptions));
+// Handle CORS preflight requests for all routes
+app.options('*', (0, cors_1.default)(corsOptions));
+// Define routes
 app.get('/', async (req, res) => {
     try {
         if (mongoose_1.default.connection.readyState !== 1) {
@@ -65,25 +75,26 @@ app.get('/', async (req, res) => {
     }
 });
 app.get('/api/count', async (req, res) => {
-  try {
-    let counter = await Counter.findOne();
-    if (!counter) {
-      counter = new Counter({ value: 0 });
+    try {
+        let counter = await Counter.findOne();
+        if (!counter) {
+            counter = new Counter({ value: 0 });
+        }
+        counter.value += 1;
+        await counter.save();
+        res.json({
+            count: counter.value,
+            message: 'Counter updated successfully and saved to the database',
+        });
     }
-    counter.value += 1;
-    await counter.save();
-    res.json({
-      count: counter.value,
-      message: 'Counter updated successfully and saved to the database',
-    }); // Add message here
-  } catch (error) {
-    res.status(500).json({ error: 'Database error' });
-  }
+    catch (error) {
+        res.status(500).json({ error: 'Database error' });
+    }
 });
 // Connect to MongoDB
 async function connectToDatabase() {
     try {
-        await mongoose_1.default.connect(mongoUri); // Type assertion here
+        await mongoose_1.default.connect(mongoUri);
         console.log('Connected to MongoDB');
         app.listen(PORT, () => {
             console.log(`Server is running on port ${PORT}`);
@@ -95,8 +106,10 @@ async function connectToDatabase() {
     }
 }
 connectToDatabase();
+// Monitor MongoDB connection
 const db = mongoose_1.default.connection;
 db.on('error', console.error.bind(console, 'MongoDB connection error:'));
 db.once('open', function () {
     console.log('MongoDB connected successfully');
 });
+// server/src/index.ts
