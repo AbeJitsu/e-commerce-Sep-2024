@@ -28,9 +28,20 @@ if (!mongoUri) {
 }
 
 // Define custom CORS options
-const corsOptions = {
-  origin: 'https://e-commerce-sep-2024.vercel.app', // Allow requests from the Vercel frontend
-  credentials: true, // Allow credentials if needed
+const allowedOrigins = [
+  'https://e-commerce-sep-2024.vercel.app',
+  'http://localhost:9000',
+];
+const corsOptions: cors.CorsOptions = {
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  optionsSuccessStatus: 200,
+  credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
 };
 

@@ -31,6 +31,7 @@ module.exports = configure(function (/* ctx */) {
     },
 
     devServer: {
+      port: 9000,
       open: true,
       proxy: {
         '/api': {

@@ -3,9 +3,12 @@
   "version": "1.0.0",
   "description": "Monorepo for e-commerce jewelry website",
   "scripts": {
+    "start": "cd server && npm start",
+    "build": "cd server && npm run build",
+    "postinstall": "cd server && npm install && npm run build",
     "client": "cd client && npm run dev",
     "server": "cd server && npm run dev",
-    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "dev": "concurrently \"npm run server\" \"wait-on http://localhost:3000 && npm run client\"",
     "install:all": "npm install && cd client && npm install && cd ../server && npm install",
     "project-tree": "tree -L 9 -I 'node_modules|.git|package-lock.json|dist|.DS_Store|public' --noreport -a"
   },
@@ -19,6 +22,10 @@
   "devDependencies": {
     "concurrently": "^6.2.0",
     "cypress": "^13.14.1",
-    "eslint": "^9.9.1"
+    "eslint": "^9.9.1",
+    "wait-on": "^8.0.0"
+  },
+  "engines": {
+    "node": "20.x"
   }
 }

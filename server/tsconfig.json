@@ -10,7 +10,7 @@
     "rootDir": "./src",
     "moduleResolution": "node",
     "resolveJsonModule": true,
-    "types": ["@types/node", "@types/cors"] // Add this line
+    "types": ["node", "cors"]
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "**/*.spec.ts"]
