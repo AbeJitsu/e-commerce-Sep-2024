@@ -5,7 +5,7 @@
   "scripts": {
     "start": "cd server && npm start",
     "build": "cd server && npm run build",
-    "postinstall": "cd server && npm install && npm run build",
+    "heroku-postbuild": "cd server && npm install && npm run build",
     "client": "cd client && npm run dev",
     "server": "cd server && npm run dev",
     "dev": "concurrently \"npm run server\" \"wait-on http://localhost:3000 && npm run client\"",
