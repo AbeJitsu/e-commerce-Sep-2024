@@ -19,7 +19,7 @@ const Counter = mongoose.model<ICounter>('Counter', CounterSchema);
 
 // Initialize Express app
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = Number(process.env.PORT) || 3000;
 
 // Ensure MONGODB_URI is defined
 const mongoUri = process.env.MONGODB_URI;
@@ -53,21 +53,23 @@ app.options('*', cors(corsOptions));
 
 // Define routes
 app.get('/', async (req: Request, res: Response) => {
+  res.json({ message: 'Welcome to EscapeRelaxandBeJeweled API' });
+});
+
+app.get('/health', async (req: Request, res: Response) => {
   try {
     if (mongoose.connection.readyState !== 1) {
       throw new Error('Database connection not established');
     }
-
     const db = mongoose.connection.db!;
     await db.admin().ping();
-
     res.json({
-      message: 'Welcome to EscapeRelaxandBeJeweled API',
+      status: 'healthy',
       dbStatus: 'Connected to MongoDB successfully',
     });
   } catch (error) {
     res.status(500).json({
-      message: 'Welcome to EscapeRelaxandBeJeweled API',
+      status: 'unhealthy',
       dbStatus: 'Failed to connect to MongoDB',
       error: error instanceof Error ? error.message : 'Unknown error',
     });
@@ -91,27 +93,29 @@ app.get('/api/count', async (req: Request, res: Response) => {
   }
 });
 
-// Connect to MongoDB
-async function connectToDatabase() {
+// Connect to MongoDB and start the server
+async function startServer() {
   try {
     await mongoose.connect(mongoUri as string);
     console.log('Connected to MongoDB');
 
-    app.listen(PORT, () => {
+    app.listen(PORT, '0.0.0.0', () => {
       console.log(`Server is running on port ${PORT}`);
     });
   } catch (err) {
-    console.error('MongoDB connection error:', err);
+    console.error('Error starting server:', err);
     process.exit(1);
   }
 }
 
-connectToDatabase();
+startServer();
 
 // Monitor MongoDB connection
-const db = mongoose.connection;
-db.on('error', console.error.bind(console, 'MongoDB connection error:'));
-db.once('open', function () {
+mongoose.connection.on(
+  'error',
+  console.error.bind(console, 'MongoDB connection error:')
+);
+mongoose.connection.once('open', function () {
   console.log('MongoDB connected successfully');
 });
 
