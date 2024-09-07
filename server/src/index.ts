@@ -31,6 +31,7 @@ if (!mongoUri) {
 const corsOptions = {
   origin: 'https://e-commerce-sep-2024.vercel.app', // Allow requests from the Vercel frontend
   credentials: true, // Allow credentials if needed
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
 };
 
 // Apply CORS middleware with options
