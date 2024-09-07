@@ -1,7 +1,8 @@
 import dotenv from 'dotenv';
-import express, { Request, Response } from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import mongoose, { Schema, Document } from 'mongoose';
+import { errorHandler, asyncHandler } from './middleware/errorHandling';
 
 // Load environment variables
 dotenv.config();
@@ -52,12 +53,16 @@ app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
 
 // Define routes
-app.get('/', async (req: Request, res: Response) => {
-  res.json({ message: 'Welcome to EscapeRelaxandBeJeweled API' });
-});
+app.get(
+  '/',
+  asyncHandler(async (req: Request, res: Response) => {
+    res.json({ message: 'Welcome to EscapeRelaxandBeJeweled API' });
+  })
+);
 
-app.get('/health', async (req: Request, res: Response) => {
-  try {
+app.get(
+  '/health',
+  asyncHandler(async (req: Request, res: Response) => {
     if (mongoose.connection.readyState !== 1) {
       throw new Error('Database connection not established');
     }
@@ -67,17 +72,12 @@ app.get('/health', async (req: Request, res: Response) => {
       status: 'healthy',
       dbStatus: 'Connected to MongoDB successfully',
     });
-  } catch (error) {
-    res.status(500).json({
-      status: 'unhealthy',
-      dbStatus: 'Failed to connect to MongoDB',
-      error: error instanceof Error ? error.message : 'Unknown error',
-    });
-  }
-});
+  })
+);
 
-app.get('/api/count', async (req: Request, res: Response) => {
-  try {
+app.get(
+  '/api/count',
+  asyncHandler(async (req: Request, res: Response) => {
     let counter = await Counter.findOne();
     if (!counter) {
       counter = new Counter({ value: 0 });
@@ -88,10 +88,11 @@ app.get('/api/count', async (req: Request, res: Response) => {
       count: counter.value,
       message: 'Counter updated successfully and saved to the database',
     });
-  } catch (error) {
-    res.status(500).json({ error: 'Database error' });
-  }
-});
+  })
+);
+
+// Error handling middleware
+app.use(errorHandler);
 
 // Connect to MongoDB and start the server
 async function startServer() {
