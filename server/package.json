@@ -12,7 +12,7 @@
     "test:watch": "jest --watch",
     "lint": "eslint 'src/**/*.ts'",
     "lint:fix": "eslint 'src/**/*.ts' --fix",
-    "project-tree": "tree -L 9 -I 'node_modules|.git|package-lock.json|dist|.DS_Store' --noreport -a"
+    "tree": "tree -L 9 -I 'node_modules|.git|package-lock.json|dist|.DS_Store' --noreport -a"
   },
   "keywords": [
     "e-commerce",
