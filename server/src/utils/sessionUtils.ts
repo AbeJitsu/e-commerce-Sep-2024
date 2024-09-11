@@ -4,7 +4,9 @@ import MongoStore from 'connect-mongo';
 import { Application } from 'express';
 
 // Function to check if a session exists in the MongoDB database
-export const checkSessionExists = async (sessionId: string): Promise<boolean> => {
+export const checkSessionExists = async (
+  sessionId: string
+): Promise<boolean> => {
   if (!sessionId) {
     console.error('Session ID is required to check session existence.');
     return false;
@@ -17,9 +19,9 @@ export const checkSessionExists = async (sessionId: string): Promise<boolean> =>
       return false;
     }
 
-    const sessionCollection = mongoose.connection.collection('sessions');
+    const sessionCollection = mongoose.connection.db.collection('sessions');
     const session = await sessionCollection.findOne({
-      _id: sessionId,
+      _id: new mongoose.Types.ObjectId(sessionId),
     });
 
     if (session) {
@@ -45,6 +47,8 @@ export const setupSession = (app: Application, mongoURI: string): void => {
       store: MongoStore.create({ mongoUrl: mongoURI }),
       cookie: {
         maxAge: 1000 * 60 * 60 * 24, // 1 day
+        secure: process.env.NODE_ENV === 'production',
+        httpOnly: true,
       },
     })
   );

@@ -11,7 +11,8 @@
     "dev": "concurrently \"npm run server\" \"wait-on http://localhost:3000 && npm run client\"",
     "install:all": "npm install && cd client && npm install && cd ../server && npm install",
     "tree": "tree -L 9 -I 'node_modules|.git|package-lock.json|dist|.DS_Store|public' --noreport -a",
-    "git-diff": "git diff --cached --unified=3"
+    "git-diff": "git diff --cached --unified=3",
+    "git-status-diff": "git status && echo '\n' && git diff --cached --unified=3"
   },
   "keywords": [
     "monorepo",

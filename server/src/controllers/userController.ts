@@ -1,7 +1,7 @@
 // server/src/controllers/userController.ts
 
 import { Request, Response } from 'express';
-import User, { IUser } from '../models/userModel';
+import { User, IUser } from '../models/userModel';
 
 // Extend the Express Request type to include user
 declare module 'express-serve-static-core' {
