@@ -7,6 +7,7 @@ import * as authService from '../services/authService';
 import * as userService from '../services/userService';
 import * as cartService from '../services/cartService';
 import { IUser } from '../models/userModel';
+import { handleError, handleSuccess } from '../utils/responseUtils'; // Adjust the import path as needed
 
 // Extend the Express Request type
 declare module 'express-serve-static-core' {
@@ -14,27 +15,6 @@ declare module 'express-serve-static-core' {
     user_id?: string;
   }
 }
-
-// Utility function to handle errors
-const handleError = (
-  res: Response,
-  error: Error,
-  message: string,
-  statusCode = 500
-) => {
-  logger.error(message, { error });
-  res.status(statusCode).json({ error: message });
-};
-
-// Utility function to handle success responses
-const handleSuccess = (
-  res: Response,
-  message: string,
-  data = {},
-  statusCode = 200
-) => {
-  res.status(statusCode).json({ message, ...data });
-};
 
 // Utility function for email and password validation
 const validateEmailAndPassword = (email: string, password: string) => {
@@ -50,8 +30,22 @@ const validateEmailAndPassword = (email: string, password: string) => {
   return { valid: true };
 };
 
+interface RegisterRequestBody {
+  email: string;
+  password: string;
+  preferredFirstName: string;
+}
+
+interface LoginRequestBody {
+  email: string;
+  password: string;
+}
+
 // Register function
-export const register = async (req: Request, res: Response) => {
+export const register = async (
+  req: Request<{}, {}, RegisterRequestBody>,
+  res: Response
+) => {
   const { email, password, preferredFirstName } = req.body;
   const validation = validateEmailAndPassword(email, password);
   if (!validation.valid) {
@@ -78,7 +72,10 @@ export const register = async (req: Request, res: Response) => {
 };
 
 // Login function
-export const login = async (req: Request, res: Response) => {
+export const login = async (
+  req: Request<{}, {}, LoginRequestBody>,
+  res: Response
+) => {
   const { email, password } = req.body;
   const validation = validateEmailAndPassword(email, password);
   if (!validation.valid) {
@@ -133,7 +130,13 @@ export const logout = async (req: Request, res: Response) => {
     if (!req.session) {
       throw new Error('No session found');
     }
-    req.session.destroy((err) => {
+
+    // Use a type assertion to satisfy TypeScript
+    const destroySession = req.session.destroy as (
+      callback?: (err?: any) => void
+    ) => void;
+
+    destroySession((err) => {
       if (err) {
         return handleError(res, err, 'Failed to log out, please try again');
       }
@@ -178,7 +181,7 @@ export const getUserProfile = async (req: Request, res: Response) => {
 // Change user role function
 export const changeUserRole = async (req: Request, res: Response) => {
   const { userId, role } = req.body;
-  if (!['user', 'admin'].includes(role)) {
+  if (role !== 'user' && role !== 'admin') {
     return res.status(400).json({ message: 'Invalid role' });
   }
 
@@ -187,7 +190,7 @@ export const changeUserRole = async (req: Request, res: Response) => {
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-    user.role = role as 'user' | 'admin';
+    user.role = role;
     await user.save();
     handleSuccess(res, 'User role updated successfully');
   } catch (error) {
