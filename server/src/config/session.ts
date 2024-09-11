@@ -60,7 +60,9 @@ const applySessionMiddleware = (
       }
 
       const originalSave = req.session.save;
-      req.session.save = function (callback?: (err: any) => void): void {
+      req.session.save = function (
+        callback?: (err: any) => void
+      ): Session & Partial<SessionData> {
         logger.debug(`Saving session: ${req.sessionID}`);
         originalSave.call(this, (err: any) => {
           if (err) {
@@ -70,6 +72,7 @@ const applySessionMiddleware = (
           }
           if (callback) callback(err);
         });
+        return this as Session & Partial<SessionData>;
       };
 
       const originalSend = res.send;

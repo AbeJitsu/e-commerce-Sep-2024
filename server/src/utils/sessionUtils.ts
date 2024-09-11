@@ -19,7 +19,11 @@ export const checkSessionExists = async (
       return false;
     }
 
-    const sessionCollection = mongoose.connection.db.collection('sessions');
+    const sessionCollection = mongoose.connection.db?.collection('sessions');
+    if (!sessionCollection) {
+      throw new Error('Database connection not established');
+    }
+
     const session = await sessionCollection.findOne({
       _id: new mongoose.Types.ObjectId(sessionId),
     });

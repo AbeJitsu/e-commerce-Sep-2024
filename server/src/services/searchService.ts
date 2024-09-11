@@ -40,7 +40,9 @@ export const searchProductsByKeywords = async (
 ): Promise<IProduct[]> => {
   try {
     logger.debug(`Searching products with keywords: ${keywords}`);
-    const filter: FilterQuery<IProduct> = { keywords: { $in: keywords } };
+    const filter: FilterQuery<IProduct> = {
+      $text: { $search: keywords.join(' ') },
+    };
     const products = await Product.find(filter);
     return products;
   } catch (error) {
