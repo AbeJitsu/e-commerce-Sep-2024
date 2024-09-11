@@ -1,6 +1,6 @@
 // server/src/services/searchService.ts
 
-import { Product, IProduct } from '../models/productModel';
+import Product, { IProduct } from '../models/productModel';
 import { logger } from '../middleware/logger';
 import { FilterQuery } from 'mongoose';
 
