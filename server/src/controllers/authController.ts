@@ -7,6 +7,13 @@ import * as authService from '../services/authService';
 import * as userService from '../services/userService';
 import * as cartService from '../services/cartService';
 
+// Extend the Express Request type
+declare module 'express-serve-static-core' {
+  interface Request {
+    user_id?: string;
+  }
+}
+
 // Utility function to handle errors
 const handleError = (
   res: Response,
@@ -92,11 +99,12 @@ export const login = async (req: Request, res: Response) => {
     }
 
     const token = authService.generateToken(user);
-    req.session.user_id = user._id;
+    req.session.user_id = user._id.toString();
+    req.user_id = user._id.toString();
 
     const guestCartConversion = await cartService.convertGuestCartToUserCart(
       req.sessionID,
-      user._id
+      user._id.toString()
     );
 
     handleSuccess(res, 'Login successful', {
@@ -136,9 +144,14 @@ export const logout = async (req: Request, res: Response) => {
 // Get user profile function
 export const getUserProfile = async (req: Request, res: Response) => {
   try {
+    if (!req.user_id) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
     logger.debug('Fetching user profile for user_id:', {
       user_id: req.user_id,
     });
+
     const user = await userService.getUserById(req.user_id);
     if (!user) {
       return res.status(404).json({ error: 'User not found' });

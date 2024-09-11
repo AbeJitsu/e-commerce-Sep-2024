@@ -66,11 +66,11 @@ const productSchema = new Schema<IProduct>({
   },
 });
 
-productSchema.pre('save', function (this: IProduct, next) {
-  if (this.variantPrice == 25) {
+productSchema.pre<IProduct>('save', function (next) {
+  if (this.variantPrice === 25) {
     this.type = 'zi';
   } else if (
-    this.variantPrice == 20 ||
+    this.variantPrice === 20 ||
     (this.bodyHtml && this.bodyHtml.toLowerCase().includes('fashion-fix'))
   ) {
     this.type = 'fashion-fix';
@@ -81,7 +81,7 @@ productSchema.pre('save', function (this: IProduct, next) {
 });
 
 productSchema.methods.reserve = function (this: IProduct): Promise<IProduct> {
-  if (this.quantity > 0 && this.status == 'available') {
+  if (this.quantity > 0 && this.status === 'available') {
     this.status = 'in cart';
     this.reservationDeadline = moment()
       .tz('America/New_York')

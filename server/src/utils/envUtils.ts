@@ -1,34 +1,38 @@
 // server/src/utils/envUtils.ts
 
-// Helper function to get a required environment variable
-const getRequiredEnvVar = (key: string): string => {
-  const value = process.env[key];
-  if (!value) {
-    throw new Error(`Required environment variable ${key} is not set`);
-  }
-  return value;
-};
+import dotenv from 'dotenv';
 
+dotenv.config();
+
+// Determines if the environment is set to production
+export const isProduction = (): boolean =>
+  process.env.NODE_ENV === 'production';
+
+// Determines if the environment is set to use the cloud backend
 export const isCloudEnvironment = (): boolean =>
+  process.env.SERVER_USE_CLOUD_BACKEND === 'true';
+
+// Determines if the environment is set to use the cloud database
+export const isCloudDatabase = (): boolean =>
   process.env.SERVER_USE_CLOUD_DB === 'true';
 
+// Returns the appropriate Backend URL based on the environment
+export const getBackendUrl = (): string => {
+  return isCloudEnvironment()
+    ? process.env.SERVER_CLOUD_BACKEND_URL || ''
+    : process.env.SERVER_LOCAL_BACKEND_URL || '';
+};
+
+// Returns the appropriate Database URL based on the environment
+export const getDatabaseUrl = (): string => {
+  return isCloudDatabase()
+    ? process.env.SERVER_CLOUD_DATABASE_URL || ''
+    : process.env.SERVER_LOCAL_DATABASE_URL || '';
+};
+
+// Returns the appropriate Frontend URL based on the environment
 export const getFrontendUrl = (): string => {
-  if (process.env.NODE_ENV === 'production') {
-    return getRequiredEnvVar('SERVER_PRODUCTION_FRONTEND_URL');
-  }
-  return process.env.SERVER_LOCAL_FRONTEND_URL || 'http://localhost:9000';
+  return isCloudEnvironment()
+    ? process.env.SERVER_CLOUD_FRONTEND_URL || ''
+    : process.env.SERVER_LOCAL_FRONTEND_URL || '';
 };
-
-export const getApiUrl = (): string => {
-  if (isCloudEnvironment()) {
-    return getRequiredEnvVar('SERVER_CLOUD_DATABASE_URL');
-  }
-  return getRequiredEnvVar('SERVER_LOCAL_DATABASE_URL');
-};
-
-export const getJwtSecret = (): string =>
-  getRequiredEnvVar('SERVER_JWT_SECRET');
-
-export const getNodeEnv = (): string => process.env.NODE_ENV || 'development';
-
-export const isProduction = (): boolean => getNodeEnv() === 'production';

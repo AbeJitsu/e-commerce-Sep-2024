@@ -1,3 +1,5 @@
+// server/src/utils/dbUtils.ts
+
 import mongoose from 'mongoose';
 import { logger } from '../middleware/logger'; // Adjust the import path as necessary
 
@@ -35,15 +37,16 @@ const getEnvVariable = (key: keyof EnvVariables): string => {
 };
 
 // Database connection function
-export const connectDB = async (): Promise<void> => {
+export const connectDB = async (): Promise<typeof mongoose> => {
   const useCloudDB = getEnvVariable('SERVER_USE_CLOUD_DB') === 'true';
   const dbURI = useCloudDB
     ? getEnvVariable('SERVER_CLOUD_DATABASE_URL')
     : getEnvVariable('SERVER_LOCAL_DATABASE_URL');
 
   try {
-    await mongoose.connect(dbURI);
+    const connection = await mongoose.connect(dbURI);
     logger.info('MongoDB connected successfully');
+    return connection;
   } catch (err) {
     if (err instanceof Error) {
       logger.error('MongoDB connection error:', err.message);
@@ -69,6 +72,23 @@ export const disconnectDB = async (): Promise<void> => {
         'An unknown error occurred while disconnecting from MongoDB'
       );
       throw new DatabaseConnectionError('Unknown disconnection error');
+    }
+  }
+};
+
+// Helper function to handle database operations
+export const handleDbOperation = async <T>(
+  operation: () => Promise<T>
+): Promise<T> => {
+  try {
+    return await operation();
+  } catch (error) {
+    if (error instanceof Error) {
+      logger.error('Database operation error:', error.message);
+      throw new DatabaseConnectionError(error.message);
+    } else {
+      logger.error('An unknown error occurred during database operation');
+      throw new DatabaseConnectionError('Unknown database operation error');
     }
   }
 };

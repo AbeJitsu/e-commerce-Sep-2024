@@ -10,6 +10,13 @@ import {
   handleSuccess,
 } from '../utils/responseUtils';
 
+// Extend the Express Request type to include the files property
+interface MulterRequest extends Request {
+  files: {
+    [fieldname: string]: Express.Multer.File[];
+  };
+}
+
 // Get all products with pagination
 export const getProducts = (req: Request, res: Response): void => {
   const { page = 1, limit = 12 } = req.query;
@@ -70,13 +77,18 @@ export const getProductById = (req: Request, res: Response): void => {
 
 // Upload CSV and process it
 export const uploadCSV = async (req: Request, res: Response): Promise<void> => {
-  if (!req.files || !req.files.regular || !req.files.premiere) {
+  const multerReq = req as MulterRequest;
+  if (
+    !multerReq.files ||
+    !multerReq.files.regular ||
+    !multerReq.files.premiere
+  ) {
     res.status(400).send({ message: 'Both CSV files are required.' });
     return;
   }
 
-  const regularCSV = req.files.regular[0];
-  const premiereCSV = req.files.premiere[0];
+  const regularCSV = multerReq.files.regular[0];
+  const premiereCSV = multerReq.files.premiere[0];
 
   try {
     await handleCSVUpload(regularCSV, premiereCSV);

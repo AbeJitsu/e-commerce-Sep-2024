@@ -1,8 +1,8 @@
 // server/src/models/cartModel.ts
 
 import mongoose, { Schema, Document, Model } from 'mongoose';
-import { IUser } from './userModel'; // Assuming you have a User model
-import { IProduct } from './productModel'; // Assuming you have a Product model
+import { IUser } from './userModel';
+import { IProduct } from './productModel';
 
 export interface ICartItem {
   product: IProduct['_id'];
@@ -35,7 +35,7 @@ const cartSchema = new Schema<ICart>({
 
 cartSchema.index({ user: 1, sessionToken: 1 }, { unique: true });
 
-cartSchema.pre('save', function (next) {
+cartSchema.pre<ICart>('save', function (next) {
   if (!this.user && !this.sessionToken) {
     return next(new Error('A cart must have either a user or a session token'));
   }
@@ -59,9 +59,9 @@ cartSchema.statics.convertGuestCartToUserCart = async function (
   let userCart = await this.findOne({ user: userId });
   if (userCart) {
     console.log('User cart found, merging items...');
-    guestCart.items.forEach((guestItem) => {
+    guestCart.items.forEach((guestItem: ICartItem) => {
       const itemIndex = userCart!.items.findIndex(
-        (userItem) =>
+        (userItem: ICartItem) =>
           userItem.product.toString() === guestItem.product.toString()
       );
       if (itemIndex !== -1) {
