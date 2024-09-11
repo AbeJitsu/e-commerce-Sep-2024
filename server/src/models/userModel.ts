@@ -12,6 +12,7 @@ interface IAddress {
 }
 
 export interface IUser extends Document {
+  _id: mongoose.Types.ObjectId;
   email: string;
   password: string;
   preferredFirstName: string;
@@ -49,14 +50,14 @@ const userSchema = new Schema<IUser>({
 });
 
 // Pre-save hook to hash the password
-userSchema.pre('save', async function (next) {
+userSchema.pre<IUser>('save', async function (next) {
   if (!this.isModified('password')) return next();
   try {
     // const salt = await bcrypt.genSalt(10);
     // this.password = await bcrypt.hash(this.password, salt);
     next();
   } catch (error) {
-    next(error);
+    next(error as Error);
   }
 });
 
@@ -67,4 +68,4 @@ userSchema.pre('save', async function (next) {
 
 const User = mongoose.model<IUser, IUserModel>('User', userSchema);
 
-export default User;
+export { User, IUserModel };

@@ -1,16 +1,15 @@
 // server/src/models/cartModel.ts
 
 import mongoose, { Schema, Document, Model } from 'mongoose';
-import { IUser } from './userModel';
-import { IProduct } from './productModel';
 
 export interface ICartItem {
-  product: IProduct['_id'];
+  product: mongoose.Types.ObjectId;
   quantity: number;
 }
 
 export interface ICart extends Document {
-  user: IUser['_id'] | null;
+  _id: mongoose.Types.ObjectId;
+  user: mongoose.Types.ObjectId | null;
   sessionToken: string | null;
   items: ICartItem[];
 }
@@ -42,8 +41,8 @@ cartSchema.pre<ICart>('save', function (next) {
   next();
 });
 
-cartSchema.statics.convertGuestCartToUserCart = async function (
-  this: ICartModel,
+async function convertGuestCartToUserCart(
+  this: Model<ICart>,
   sessionToken: string,
   userId: string
 ): Promise<ICart | null> {
@@ -73,14 +72,16 @@ cartSchema.statics.convertGuestCartToUserCart = async function (
     await guestCart.deleteOne();
   } else {
     console.log('No existing user cart. Assigning user to guest cart...');
-    guestCart.user = userId;
+    guestCart.user = new mongoose.Types.ObjectId(userId);
     guestCart.sessionToken = null;
     userCart = guestCart;
   }
   const savedCart = await userCart.save();
   console.log('Cart after conversion:', savedCart);
   return savedCart;
-};
+}
+
+cartSchema.statics.convertGuestCartToUserCart = convertGuestCartToUserCart;
 
 const Cart = mongoose.model<ICart, ICartModel>('Cart', cartSchema);
 

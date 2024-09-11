@@ -6,6 +6,7 @@ import { logger } from '../middleware/logger';
 import * as authService from '../services/authService';
 import * as userService from '../services/userService';
 import * as cartService from '../services/cartService';
+import { IUser } from '../models/userModel';
 
 // Extend the Express Request type
 declare module 'express-serve-static-core' {
@@ -85,7 +86,7 @@ export const login = async (req: Request, res: Response) => {
   }
 
   try {
-    const user = await userService.getUserByEmail(email);
+    const user = (await userService.getUserByEmail(email)) as IUser | null;
     if (!user) {
       return res.status(401).json({ error: 'Invalid email and/or password' });
     }
@@ -98,7 +99,10 @@ export const login = async (req: Request, res: Response) => {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    const token = authService.generateToken(user);
+    const token = authService.generateToken({
+      _id: user._id.toString(),
+      role: user.role,
+    });
     req.session.user_id = user._id.toString();
     req.user_id = user._id.toString();
 
@@ -109,7 +113,7 @@ export const login = async (req: Request, res: Response) => {
 
     handleSuccess(res, 'Login successful', {
       user: {
-        _id: user._id,
+        _id: user._id.toString(),
         email: user.email,
         preferredFirstName: user.preferredFirstName,
         role: user.role,
@@ -152,7 +156,7 @@ export const getUserProfile = async (req: Request, res: Response) => {
       user_id: req.user_id,
     });
 
-    const user = await userService.getUserById(req.user_id);
+    const user = (await userService.getUserById(req.user_id)) as IUser | null;
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
@@ -179,11 +183,11 @@ export const changeUserRole = async (req: Request, res: Response) => {
   }
 
   try {
-    const user = await userService.getUserById(userId);
+    const user = (await userService.getUserById(userId)) as IUser | null;
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-    user.role = role;
+    user.role = role as 'user' | 'admin';
     await user.save();
     handleSuccess(res, 'User role updated successfully');
   } catch (error) {

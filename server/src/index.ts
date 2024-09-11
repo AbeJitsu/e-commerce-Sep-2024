@@ -1,13 +1,27 @@
+// server/src/index.ts
+
 import dotenv from 'dotenv';
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import mongoose, { Schema, Document } from 'mongoose';
+import http from 'http';
 import { errorHandler, asyncHandler } from './middleware/errorHandling';
+import connectDB from './config/db';
+import setupTestPageRoutes from './routes/testPageRoutes';
+import environmentRoutes from './routes/environmentRoutes';
+import {
+  isProduction,
+  getFrontendUrl,
+  isCloudEnvironment,
+} from './utils/envUtils';
+import { applySessionMiddleware } from './middleware/sessionMiddleware';
+import setupSwaggerDocs from './config/swaggerConfig';
+import { attachLogger, logger } from './middleware/logger';
+import configureRoutes from './config/configureRoutes';
+import setupWebSocket from './websocket';
 
-// Load environment variables
 dotenv.config();
 
-// Define the Counter interface and schema
 interface ICounter extends Document {
   value: number;
 }
@@ -18,41 +32,47 @@ const CounterSchema: Schema = new Schema({
 
 const Counter = mongoose.model<ICounter>('Counter', CounterSchema);
 
-// Initialize Express app
 const app = express();
+const server = http.createServer(app);
 const PORT = Number(process.env.PORT) || 3000;
 
-// Ensure MONGODB_URI is defined
-const mongoUri = process.env.MONGODB_URI;
+const mongoUri =
+  process.env.MONGODB_URI ||
+  (process.env.SERVER_USE_CLOUD_DB === 'true'
+    ? process.env.SERVER_CLOUD_DATABASE_URL
+    : process.env.SERVER_LOCAL_DATABASE_URL);
+
 if (!mongoUri) {
-  throw new Error('MONGODB_URI environment variable is not set');
+  throw new Error('MongoDB URI is not set');
 }
 
-// Define custom CORS options
-const allowedOrigins = [
-  'https://e-commerce-sep-2024.vercel.app',
-  'http://localhost:9000',
-];
+console.log('Loaded Environment Variables:', {
+  SERVER_LOCAL_DATABASE_URL: process.env.SERVER_LOCAL_DATABASE_URL,
+  SERVER_CLOUD_DATABASE_URL: process.env.SERVER_CLOUD_DATABASE_URL,
+  SERVER_USE_CLOUD_DB: process.env.SERVER_USE_CLOUD_DB,
+  NODE_ENV: process.env.NODE_ENV,
+  SERVER_CORS_ORIGIN: getFrontendUrl(),
+  SERVER_LOCAL_BACKEND_URL: process.env.SERVER_LOCAL_BACKEND_URL,
+  IS_CLOUD_ENVIRONMENT: isCloudEnvironment(),
+});
+
 const corsOptions: cors.CorsOptions = {
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  optionsSuccessStatus: 200,
-  credentials: true,
+  origin: getFrontendUrl(),
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-counter-value'],
+  credentials: true,
+  optionsSuccessStatus: 204,
 };
 
-// Apply CORS middleware with options
 app.use(cors(corsOptions));
-
-// Handle CORS preflight requests for all routes
 app.options('*', cors(corsOptions));
+app.use(attachLogger);
+app.use(express.json());
+app.use('/', environmentRoutes);
+app.use('/', setupTestPageRoutes());
 
-// Define routes
+setupSwaggerDocs(app);
+
 app.get(
   '/',
   asyncHandler(async (req: Request, res: Response) => {
@@ -91,27 +111,55 @@ app.get(
   })
 );
 
-// Error handling middleware
 app.use(errorHandler);
 
-// Connect to MongoDB and start the server
-async function startServer() {
+const setupServer = async () => {
   try {
-    await mongoose.connect(mongoUri as string);
-    console.log('Connected to MongoDB');
+    console.log('Attempting to connect to MongoDB...');
+    const dbConnection = await connectDB();
+    console.log('MongoDB Connected after connectDB() call');
 
-    app.listen(PORT, '0.0.0.0', () => {
-      console.log(`Server is running on port ${PORT}`);
+    applySessionMiddleware(app, mongoUri);
+
+    configureRoutes(app);
+
+    setupWebSocket(server);
+
+    server.listen(PORT, () => {
+      logger.info(`Server running on port ${PORT}`);
     });
-  } catch (err) {
-    console.error('Error starting server:', err);
-    process.exit(1);
+
+    process.on('SIGINT', () => {
+      console.log('Shutting down server...');
+      server.close(async () => {
+        await mongoose.connection.close();
+        console.log('MongoDB connection closed.');
+        console.log('Server closed');
+        process.exit(0);
+      });
+    });
+
+    return { app, dbConnection };
+  } catch (error) {
+    console.error('Error setting up server:', error);
+    throw error;
   }
+};
+
+if (require.main === module) {
+  setupServer();
 }
 
-startServer();
+let appInstance: express.Application | null = null;
 
-// Monitor MongoDB connection
+export default async (req: Request, res: Response) => {
+  if (!appInstance) {
+    const { app: expressApp } = await setupServer();
+    appInstance = expressApp;
+  }
+  return appInstance(req, res);
+};
+
 mongoose.connection.on(
   'error',
   console.error.bind(console, 'MongoDB connection error:')

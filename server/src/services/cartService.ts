@@ -1,11 +1,13 @@
 // server/src/services/cartService.ts
 
+import mongoose, { FilterQuery } from 'mongoose';
 import Cart, { ICart } from '../models/cartModel';
 import { logger } from '../middleware/logger';
 
 interface CartQuery {
-  user?: string;
+  user?: string | mongoose.Types.ObjectId;
   sessionToken?: string;
+  [key: string]: any; // This allows for additional properties
 }
 
 interface CartOperation {
@@ -17,7 +19,9 @@ interface CartOperation {
 // Utility function to fetch a cart and populate items
 const fetchCart = async (query: CartQuery): Promise<ICart | null> => {
   try {
-    return await Cart.findOne(query).populate('items.product');
+    return await Cart.findOne(query as FilterQuery<ICart>).populate(
+      'items.product'
+    );
   } catch (error) {
     logger.error('Error fetching cart:', error);
     throw new Error('Failed to fetch cart');
@@ -62,7 +66,10 @@ const handleCartItemOperation = async (
       if (itemIndex !== -1 && operation.quantity) {
         cart.items[itemIndex].quantity += operation.quantity;
       } else if (productId && operation.quantity) {
-        cart.items.push({ product: productId, quantity: operation.quantity });
+        cart.items.push({
+          product: new mongoose.Types.ObjectId(productId),
+          quantity: operation.quantity,
+        });
       }
       break;
     case 'update':
@@ -80,7 +87,10 @@ const handleCartItemOperation = async (
       break;
     case 'sync':
       if (operation.cartItems) {
-        cart.items = operation.cartItems;
+        cart.items = operation.cartItems.map((item) => ({
+          ...item,
+          product: new mongoose.Types.ObjectId(item.product),
+        }));
       }
       break;
     default:
@@ -154,7 +164,7 @@ export const mergeCart = async (
         userCart.items[itemIndex].quantity += localItem.quantity;
       } else {
         userCart.items.push({
-          product: localItem.product._id,
+          product: new mongoose.Types.ObjectId(localItem.product._id),
           quantity: localItem.quantity,
         });
       }
@@ -178,13 +188,13 @@ export const convertGuestCartToUserCart = async (
       return null;
     }
 
-    guestCart.user = userId;
+    guestCart.user = new mongoose.Types.ObjectId(userId);
     guestCart.sessionToken = null;
 
     await guestCart.save();
 
     const userCart = await Cart.findOneAndUpdate(
-      { user: userId },
+      { user: new mongoose.Types.ObjectId(userId) },
       { $addToSet: { items: { $each: guestCart.items } } },
       { new: true, upsert: true }
     ).populate('items.product');

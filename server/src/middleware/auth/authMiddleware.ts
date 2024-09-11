@@ -1,7 +1,7 @@
-// server/src/middleware/auth/authMiddleware.ts
+// src/middleware/auth/authMiddleware.ts
 
 import { Request, Response, NextFunction } from 'express';
-import User, { IUser } from '../../models/userModel';
+import { User, IUser } from '../../models/userModel';
 import mongoose from 'mongoose';
 
 // Extend the Express Request type to include user and user_id

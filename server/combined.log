@@ -1,0 +1,20 @@
+{"level":"info","message":"Connecting to MongoDB with URI: mongodb://localhost:27017/your_local_db_name","timestamp":"2024-09-11T16:16:03.382Z"}
+{"level":"info","message":"MongoDB connected...","timestamp":"2024-09-11T16:16:03.426Z"}
+{"level":"info","message":"Session middleware applied.","timestamp":"2024-09-11T16:16:03.429Z"}
+{"level":"info","message":"Server running on port 3000","timestamp":"2024-09-11T16:16:03.430Z"}
+{"level":"info","message":"Connecting to MongoDB with URI: mongodb://localhost:27017/your_local_db_name","timestamp":"2024-09-11T16:16:13.885Z"}
+{"level":"info","message":"MongoDB connected...","timestamp":"2024-09-11T16:16:13.902Z"}
+{"level":"info","message":"Session middleware applied.","timestamp":"2024-09-11T16:16:13.904Z"}
+{"level":"info","message":"Server running on port 3000","timestamp":"2024-09-11T16:16:13.905Z"}
+{"level":"info","message":"Connecting to MongoDB with URI: mongodb://localhost:27017/your_local_db_name","timestamp":"2024-09-11T16:19:16.132Z"}
+{"level":"info","message":"MongoDB connected...","timestamp":"2024-09-11T16:19:16.149Z"}
+{"level":"info","message":"Session middleware applied.","timestamp":"2024-09-11T16:19:16.152Z"}
+{"level":"info","message":"Server running on port 3000","timestamp":"2024-09-11T16:19:16.153Z"}
+{"level":"info","message":"Connecting to MongoDB with URI: mongodb://localhost:27017/your_local_db_name","timestamp":"2024-09-11T16:26:35.235Z"}
+{"level":"info","message":"MongoDB connected...","timestamp":"2024-09-11T16:26:35.252Z"}
+{"level":"info","message":"Session middleware applied.","timestamp":"2024-09-11T16:26:35.254Z"}
+{"level":"info","message":"Server running on port 3000","timestamp":"2024-09-11T16:26:35.255Z"}
+{"level":"info","message":"Connecting to MongoDB with URI: mongodb://localhost:27017/your_local_db_name","timestamp":"2024-09-11T16:27:06.292Z"}
+{"level":"info","message":"MongoDB connected...","timestamp":"2024-09-11T16:27:06.309Z"}
+{"level":"info","message":"Session middleware applied.","timestamp":"2024-09-11T16:27:06.311Z"}
+{"level":"info","message":"Server running on port 3000","timestamp":"2024-09-11T16:27:06.312Z"}

@@ -17,7 +17,7 @@ export const processPayment = async (
 ): Promise<CreatePaymentResponse['payment']> => {
   const idempotencyKey = crypto.randomBytes(12).toString('hex');
   const paymentMoney = {
-    amount: Math.round(amount * 100), // Square API expects amount in cents
+    amount: BigInt(Math.round(amount * 100)), // Convert to BigInt, Square API expects amount in cents
     currency,
   };
 
