@@ -1,38 +1,23 @@
-// server/src/utils/envUtils.ts
+import Config from '../config/config';
 
-import dotenv from 'dotenv';
-
-dotenv.config();
-
-// Determines if the environment is set to production
-export const isProduction = (): boolean =>
-  process.env.NODE_ENV === 'production';
+// Re-export isProduction for backwards compatibility
+export const isProduction = Config.isProduction;
 
 // Determines if the environment is set to use the cloud backend
-export const isCloudEnvironment = (): boolean =>
-  process.env.SERVER_USE_CLOUD_BACKEND === 'true';
+export const isCloudEnvironment = (): boolean => Config.SERVER_USE_CLOUD_BACKEND;
 
 // Determines if the environment is set to use the cloud database
-export const isCloudDatabase = (): boolean =>
-  process.env.SERVER_USE_CLOUD_DB === 'true';
+export const isCloudDatabase = (): boolean => Config.SERVER_USE_CLOUD_DB;
 
-// Returns the appropriate Backend URL based on the environment
-export const getBackendUrl = (): string => {
-  return isCloudEnvironment()
-    ? process.env.SERVER_CLOUD_BACKEND_URL || ''
-    : process.env.SERVER_LOCAL_BACKEND_URL || '';
-};
+// Re-export URL getters for backwards compatibility
+export const getBackendUrl = Config.getBackendUrl;
+export const getDatabaseUrl = Config.getDatabaseUrl;
+export const getFrontendUrl = Config.getFrontendUrl;
 
-// Returns the appropriate Database URL based on the environment
-export const getDatabaseUrl = (): string => {
-  return isCloudDatabase()
-    ? process.env.SERVER_CLOUD_DATABASE_URL || ''
-    : process.env.SERVER_LOCAL_DATABASE_URL || '';
-};
-
-// Returns the appropriate Frontend URL based on the environment
-export const getFrontendUrl = (): string => {
-  return isCloudEnvironment()
-    ? process.env.SERVER_CLOUD_FRONTEND_URL || ''
-    : process.env.SERVER_LOCAL_FRONTEND_URL || '';
+// Add any additional environment-related utility functions here
+// For example:
+export const getEnvironmentName = (): string => {
+  if (isProduction()) return 'Production';
+  if (isCloudEnvironment()) return 'Cloud Development';
+  return 'Local Development';
 };

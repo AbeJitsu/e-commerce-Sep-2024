@@ -1,6 +1,3 @@
-// server/src/index.ts
-
-import dotenv from 'dotenv';
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import mongoose, { Schema, Document } from 'mongoose';
@@ -19,8 +16,7 @@ import setupSwaggerDocs from './config/swaggerConfig';
 import { attachLogger, logger } from './middleware/logger';
 import configureRoutes from './config/configureRoutes';
 import setupWebSocket from './websocket';
-
-dotenv.config();
+import Config from './config/config';
 
 interface ICounter extends Document {
   value: number;
@@ -34,25 +30,21 @@ const Counter = mongoose.model<ICounter>('Counter', CounterSchema);
 
 const app = express();
 const server = http.createServer(app);
-const PORT = Number(process.env.PORT) || 3000;
+const PORT = Config.PORT;
 
-const mongoUri =
-  process.env.MONGODB_URI ||
-  (process.env.SERVER_USE_CLOUD_DB === 'true'
-    ? process.env.SERVER_CLOUD_DATABASE_URL
-    : process.env.SERVER_LOCAL_DATABASE_URL);
+const mongoUri = Config.MONGODB_URI || Config.getDatabaseUrl();
 
 if (!mongoUri) {
   throw new Error('MongoDB URI is not set');
 }
 
 console.log('Loaded Environment Variables:', {
-  SERVER_LOCAL_DATABASE_URL: process.env.SERVER_LOCAL_DATABASE_URL,
-  SERVER_CLOUD_DATABASE_URL: process.env.SERVER_CLOUD_DATABASE_URL,
-  SERVER_USE_CLOUD_DB: process.env.SERVER_USE_CLOUD_DB,
-  NODE_ENV: process.env.NODE_ENV,
+  SERVER_LOCAL_DATABASE_URL: Config.SERVER_LOCAL_DATABASE_URL,
+  SERVER_CLOUD_DATABASE_URL: Config.SERVER_CLOUD_DATABASE_URL,
+  SERVER_USE_CLOUD_DB: Config.SERVER_USE_CLOUD_DB,
+  NODE_ENV: Config.NODE_ENV,
   SERVER_CORS_ORIGIN: getFrontendUrl(),
-  SERVER_LOCAL_BACKEND_URL: process.env.SERVER_LOCAL_BACKEND_URL,
+  SERVER_LOCAL_BACKEND_URL: Config.SERVER_LOCAL_BACKEND_URL,
   IS_CLOUD_ENVIRONMENT: isCloudEnvironment(),
 });
 
@@ -167,5 +159,3 @@ mongoose.connection.on(
 mongoose.connection.once('open', function () {
   console.log('MongoDB connected successfully');
 });
-
-// server/src/index.ts
