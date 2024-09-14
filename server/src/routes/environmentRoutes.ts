@@ -1,4 +1,7 @@
 import express, { Router, Request, Response } from 'express';
+import { asyncHandler } from '../middleware/errorHandling';
+import { logger } from '../middleware/logger';
+import { configService } from '../services/configService';
 
 const router: Router = express.Router();
 
@@ -36,10 +39,10 @@ const router: Router = express.Router();
  *               properties:
  *                 message:
  *                   type: string
- *                 SERVER_USE_CLOUD_BACKEND:
- *                   type: string
- *                 SERVER_USE_CLOUD_DB:
- *                   type: string
+ *                 useCloudBackend:
+ *                   type: boolean
+ *                 useCloudDB:
+ *                   type: boolean
  *       400:
  *         description: Invalid input. Expected boolean values.
  *         content:
@@ -50,23 +53,37 @@ const router: Router = express.Router();
  *                 error:
  *                   type: string
  */
-router.post('/api/toggle-environment', (req: Request, res: Response) => {
-  const { useCloudBackend, useCloudDB } = req.body;
+router.post(
+  '/toggle-environment',
+  asyncHandler(async (req: Request, res: Response) => {
+    const { useCloudBackend, useCloudDB } = req.body;
 
-  if (typeof useCloudBackend !== 'boolean' || typeof useCloudDB !== 'boolean') {
-    return res
-      .status(400)
-      .json({ error: 'Invalid input. Expected boolean values.' });
-  }
+    if (
+      typeof useCloudBackend !== 'boolean' ||
+      typeof useCloudDB !== 'boolean'
+    ) {
+      return res
+        .status(400)
+        .json({ error: 'Invalid input. Expected boolean values.' });
+    }
 
-  process.env.SERVER_USE_CLOUD_BACKEND = useCloudBackend ? 'true' : 'false';
-  process.env.SERVER_USE_CLOUD_DB = useCloudDB ? 'true' : 'false';
+    await configService.updateConfig({
+      useCloudBackend,
+      useCloudDatabase: useCloudDB,
+    });
 
-  res.json({
-    message: 'Environment settings updated successfully',
-    SERVER_USE_CLOUD_BACKEND: process.env.SERVER_USE_CLOUD_BACKEND,
-    SERVER_USE_CLOUD_DB: process.env.SERVER_USE_CLOUD_DB,
-  });
-});
+    logger.info(
+      `Environment settings updated: useCloudBackend=${useCloudBackend}, useCloudDB=${useCloudDB}`
+    );
+
+    const updatedConfig = await configService.getConfig();
+
+    res.json({
+      message: 'Environment settings updated successfully',
+      useCloudBackend: updatedConfig.useCloudBackend,
+      useCloudDB: updatedConfig.useCloudDatabase,
+    });
+  })
+);
 
 export default router;

@@ -1,94 +1,97 @@
-// server/src/utils/dbUtils.ts
-
 import mongoose from 'mongoose';
-import { logger } from '../middleware/logger'; // Adjust the import path as necessary
+import { logger } from '../middleware/logger';
 
-// Define custom error types
-class DatabaseConnectionError extends Error {
-  constructor(message: string) {
+export class DatabaseError extends Error {
+  constructor(message: string, public readonly cause?: unknown) {
     super(message);
+    this.name = 'DatabaseError';
+  }
+}
+
+export class DatabaseConnectionError extends DatabaseError {
+  constructor(message: string, cause?: unknown) {
+    super(message, cause);
     this.name = 'DatabaseConnectionError';
   }
 }
 
-class EnvironmentVariableError extends Error {
+export class DatabaseOperationError extends DatabaseError {
+  constructor(message: string, cause?: unknown) {
+    super(message, cause);
+    this.name = 'DatabaseOperationError';
+  }
+}
+
+export class EnvironmentVariableError extends Error {
   constructor(message: string) {
     super(message);
     this.name = 'EnvironmentVariableError';
   }
 }
 
-// Define the shape of our environment variables
-interface EnvVariables {
-  SERVER_USE_CLOUD_DB: string;
-  SERVER_CLOUD_DATABASE_URL: string;
-  SERVER_LOCAL_DATABASE_URL: string;
-}
-
-// Function to safely get environment variables
-const getEnvVariable = (key: keyof EnvVariables): string => {
-  const value = process.env[key];
-  if (!value) {
-    throw new EnvironmentVariableError(
-      `Environment variable ${key} is not set`
-    );
-  }
-  return value;
-};
-
-// Database connection function
-export const connectDB = async (): Promise<typeof mongoose> => {
-  const useCloudDB = getEnvVariable('SERVER_USE_CLOUD_DB') === 'true';
-  const dbURI = useCloudDB
-    ? getEnvVariable('SERVER_CLOUD_DATABASE_URL')
-    : getEnvVariable('SERVER_LOCAL_DATABASE_URL');
-
-  try {
-    const connection = await mongoose.connect(dbURI);
-    logger.info('MongoDB connected successfully');
-    return connection;
-  } catch (err) {
-    if (err instanceof Error) {
-      logger.error('MongoDB connection error:', err.message);
-      throw new DatabaseConnectionError(err.message);
-    } else {
-      logger.error('An unknown error occurred while connecting to MongoDB');
-      throw new DatabaseConnectionError('Unknown connection error');
-    }
-  }
-};
-
-// Disconnect function for cleanup
-export const disconnectDB = async (): Promise<void> => {
-  try {
-    await mongoose.disconnect();
-    logger.info('MongoDB disconnected successfully');
-  } catch (err) {
-    if (err instanceof Error) {
-      logger.error('MongoDB disconnection error:', err.message);
-      throw new DatabaseConnectionError(err.message);
-    } else {
-      logger.error(
-        'An unknown error occurred while disconnecting from MongoDB'
-      );
-      throw new DatabaseConnectionError('Unknown disconnection error');
-    }
-  }
-};
-
-// Helper function to handle database operations
 export const handleDbOperation = async <T>(
-  operation: () => Promise<T>
+  operation: () => Promise<T>,
+  errorMessage: string = 'Database operation failed'
 ): Promise<T> => {
   try {
     return await operation();
   } catch (error) {
-    if (error instanceof Error) {
-      logger.error('Database operation error:', error.message);
-      throw new DatabaseConnectionError(error.message);
-    } else {
-      logger.error('An unknown error occurred during database operation');
-      throw new DatabaseConnectionError('Unknown database operation error');
+    logger.error(errorMessage, error);
+    throw new DatabaseOperationError(errorMessage, error);
+  }
+};
+
+export const isConnected = (): boolean => {
+  return mongoose.connection.readyState === 1;
+};
+
+export const getConnectionStatus = (): string => {
+  const states = ['disconnected', 'connected', 'connecting', 'disconnecting'];
+  return states[mongoose.connection.readyState];
+};
+
+export const validateObjectId = (id: string): boolean => {
+  return mongoose.isValidObjectId(id);
+};
+
+export const toObjectId = (id: string): mongoose.Types.ObjectId => {
+  if (!validateObjectId(id)) {
+    throw new DatabaseOperationError(`Invalid ObjectId: ${id}`);
+  }
+  return new mongoose.Types.ObjectId(id);
+};
+
+interface MongoDocument {
+  _id?: mongoose.Types.ObjectId;
+  __v?: number;
+  [key: string]: unknown;
+}
+
+export const sanitizeDocument = <
+  T extends MongoDocument,
+  K extends keyof T = '_id' | '__v'
+>(
+  doc: T,
+  fieldsToOmit: K[] = ['_id', '__v'] as K[]
+): Omit<T, K> => {
+  const sanitized = { ...doc };
+  fieldsToOmit.forEach((field) => delete sanitized[field]);
+  return sanitized as Omit<T, K>;
+};
+
+export const retryOperation = async <T>(
+  operation: () => Promise<T>,
+  retries: number = 3,
+  delay: number = 1000
+): Promise<T> => {
+  try {
+    return await operation();
+  } catch (error) {
+    if (retries > 0) {
+      logger.warn(`Operation failed. Retrying... (${retries} attempts left)`);
+      await new Promise((resolve) => setTimeout(resolve, delay));
+      return retryOperation(operation, retries - 1, delay);
     }
+    throw error;
   }
 };
