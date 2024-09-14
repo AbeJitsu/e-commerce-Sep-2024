@@ -29,3 +29,5 @@ const configureMiddleware = async (app: Application): Promise<void> => {
 };
 
 export default configureMiddleware;
+
+// server/src/config/configureMiddleware.ts
