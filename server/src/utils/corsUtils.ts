@@ -1,8 +1,9 @@
 import cors from 'cors';
+import { Express } from 'express';
 import { getFrontendUrl } from './envUtils';
 
-const getCorsOptions = (): cors.CorsOptions => {
-  const frontendUrl = getFrontendUrl();
+const getCorsOptions = async (): Promise<cors.CorsOptions> => {
+  const frontendUrl = await getFrontendUrl();
   console.log('CORS origin set to:', frontendUrl);
   return {
     origin: frontendUrl,
@@ -13,4 +14,10 @@ const getCorsOptions = (): cors.CorsOptions => {
   };
 };
 
-export const corsMiddleware = cors(getCorsOptions());
+export const configureCors = async (app: Express): Promise<void> => {
+  const corsOptions = await getCorsOptions();
+  app.use(cors(corsOptions));
+};
+
+// Usage example:
+// await configureCors(app);
