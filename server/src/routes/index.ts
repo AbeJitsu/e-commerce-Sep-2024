@@ -1,6 +1,4 @@
 import express from 'express';
-import environmentRoutes from './environmentRoutes';
-import testPageRoutes from './testPageRoutes';
 
 const router = express.Router();
 
@@ -9,11 +7,10 @@ router.get('/health', (req, res) => {
   res.status(200).json({ status: 'OK', message: 'Server is running' });
 });
 
-// Use environment routes
-router.use('/api', environmentRoutes);
-
-// Use test page routes
-router.use('/api', testPageRoutes);
+// Basic API route
+router.get('/api', (req, res) => {
+  res.json({ message: 'Welcome to the API' });
+});
 
 export default router;
 
