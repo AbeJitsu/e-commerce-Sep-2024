@@ -2,6 +2,7 @@ import dotenv from 'dotenv';
 import express from 'express';
 import mongoose from 'mongoose';
 import configureMiddleware from './config/configureMiddleware';
+import configureRoutes from './config/configureRoutes';
 import connectDB from './config/db';
 import { errorHandler, asyncHandler } from './middleware/errorHandling';
 
@@ -17,6 +18,9 @@ if (!MONGODB_URI) {
 
 // Apply middleware configuration
 configureMiddleware(app);
+
+// Apply routes configuration
+configureRoutes(app);
 
 // Counter model
 const CounterSchema = new mongoose.Schema({
