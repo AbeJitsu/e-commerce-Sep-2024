@@ -34,3 +34,5 @@ export const asyncHandler = (
     Promise.resolve(fn(req, res, next)).catch(next);
   };
 };
+
+// server/src/middleware/errorHandling.ts

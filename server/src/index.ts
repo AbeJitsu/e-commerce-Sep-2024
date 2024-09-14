@@ -3,6 +3,7 @@ import express from 'express';
 import mongoose from 'mongoose';
 import configureMiddleware from './config/configureMiddleware';
 import connectDB from './config/db';
+import { errorHandler, asyncHandler } from './middleware/errorHandling';
 
 dotenv.config();
 
@@ -28,22 +29,26 @@ app.get('/', (req: express.Request, res: express.Response) => {
   res.json({ message: 'Welcome to EscapeRelaxandBeJeweled API' });
 });
 
-app.get('/health', async (req: express.Request, res: express.Response) => {
-  if (mongoose.connection.readyState !== 1) {
-    res.status(500).json({
-      status: 'error',
-      message: 'Database connection not established',
+app.get(
+  '/health',
+  asyncHandler(async (req: express.Request, res: express.Response) => {
+    if (mongoose.connection.readyState !== 1) {
+      res.status(500).json({
+        status: 'error',
+        message: 'Database connection not established',
+      });
+      return;
+    }
+    res.json({
+      status: 'healthy',
+      dbStatus: 'Connected to MongoDB successfully',
     });
-    return;
-  }
-  res.json({
-    status: 'healthy',
-    dbStatus: 'Connected to MongoDB successfully',
-  });
-});
+  })
+);
 
-app.get('/api/count', async (req: express.Request, res: express.Response) => {
-  try {
+app.get(
+  '/api/count',
+  asyncHandler(async (req: express.Request, res: express.Response) => {
     let counter = await Counter.findOne();
     if (!counter) {
       counter = new Counter({ value: 0 });
@@ -54,10 +59,11 @@ app.get('/api/count', async (req: express.Request, res: express.Response) => {
       count: counter.value,
       message: 'Counter updated successfully and saved to the database',
     });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to update counter' });
-  }
-});
+  })
+);
+
+// Apply error handling middleware
+app.use(errorHandler);
 
 // Start server function
 const startServer = async () => {
@@ -76,3 +82,5 @@ const startServer = async () => {
 startServer();
 
 export default app;
+
+// server/src/index.ts
