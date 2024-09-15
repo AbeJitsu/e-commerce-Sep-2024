@@ -7,8 +7,15 @@ interface DBConnection {
 
 let cachedConnection: DBConnection | null = null;
 
+const validateMongoURI = (uri: string | undefined): string => {
+  if (!uri) {
+    throw new Error('MONGODB_URI environment variable is not set');
+  }
+  return uri;
+};
+
 const connectDB = async (
-  mongoURI: string,
+  mongoURI: string | undefined,
   retries = 5
 ): Promise<DBConnection> => {
   if (cachedConnection) {
@@ -18,12 +25,10 @@ const connectDB = async (
 
   console.log('Attempting to connect to MongoDB');
 
-  if (!mongoURI) {
-    throw new Error('MongoDB URI is not defined');
-  }
+  const validatedURI = validateMongoURI(mongoURI);
 
   try {
-    const client = await mongoose.connect(mongoURI, {
+    const client = await mongoose.connect(validatedURI, {
       serverSelectionTimeoutMS: 5000,
       maxPoolSize: 10,
     });
@@ -35,7 +40,7 @@ const connectDB = async (
     if (retries > 0) {
       console.warn(`Connection failed. Retrying... (${retries} attempts left)`);
       await new Promise((resolve) => setTimeout(resolve, 5000));
-      return connectDB(mongoURI, retries - 1);
+      return connectDB(validatedURI, retries - 1);
     }
     throw new Error(
       err instanceof Error ? err.message : 'Unknown connection error'
@@ -56,3 +61,5 @@ export const isConnected = (): boolean => {
 };
 
 export default connectDB;
+
+// server/src/config/db.ts

@@ -10,12 +10,17 @@ import { Counter } from './models/Counter';
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
-const MONGODB_URI = process.env.MONGODB_URI;
 
-if (!MONGODB_URI) {
-  throw new Error('MONGODB_URI environment variable is not set');
-}
+const getEnvVar = (key: string, defaultValue?: string): string => {
+  const value = process.env[key] || defaultValue;
+  if (value === undefined) {
+    throw new Error(`Environment variable ${key} is not set`);
+  }
+  return value;
+};
+
+const PORT = parseInt(getEnvVar('PORT', '3000'), 10);
+const MONGODB_URI = getEnvVar('MONGODB_URI');
 
 // Apply middleware configuration
 configureMiddleware(app);

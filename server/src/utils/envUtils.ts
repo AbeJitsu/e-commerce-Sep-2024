@@ -108,3 +108,5 @@ export const validateEnvVariables = (): void => {
 
   requiredVars.forEach(requireEnvVar);
 };
+
+// server/src/utils/envUtils.ts
