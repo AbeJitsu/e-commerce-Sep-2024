@@ -5,6 +5,7 @@ import configureMiddleware from './config/configureMiddleware';
 import configureRoutes from './config/configureRoutes';
 import connectDB from './config/db';
 import { errorHandler, asyncHandler } from './middleware/errorHandling';
+import { Counter } from './models/Counter';
 
 dotenv.config();
 
@@ -21,12 +22,6 @@ configureMiddleware(app);
 
 // Apply routes configuration
 configureRoutes(app);
-
-// Counter model
-const CounterSchema = new mongoose.Schema({
-  value: { type: Number, default: 0 },
-});
-const Counter = mongoose.model('Counter', CounterSchema);
 
 // Routes
 app.get('/', (req: express.Request, res: express.Response) => {
