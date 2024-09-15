@@ -1,5 +1,6 @@
 import winston from 'winston';
 import { Request, Response, NextFunction } from 'express';
+import { NODE_ENV } from '../utils/envUtils';
 
 const logger = winston.createLogger({
   level: 'info',
@@ -13,7 +14,7 @@ const logger = winston.createLogger({
   ],
 });
 
-if (process.env.NODE_ENV !== 'production') {
+if (NODE_ENV !== 'production') {
   logger.add(
     new winston.transports.Console({
       format: winston.format.combine(
@@ -41,3 +42,5 @@ const attachLogger = (req: Request, res: Response, next: NextFunction) => {
 };
 
 export { logger, attachLogger };
+
+// server/src/middleware/logger.ts

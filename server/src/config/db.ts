@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { logger } from '../middleware/logger';
 
 interface DBConnection {
   client: mongoose.Mongoose;
@@ -19,11 +20,11 @@ const connectDB = async (
   retries = 5
 ): Promise<DBConnection> => {
   if (cachedConnection) {
-    console.log('Using cached database connection');
+    logger.info('Using cached database connection');
     return cachedConnection;
   }
 
-  console.log('Attempting to connect to MongoDB');
+  logger.info('Attempting to connect to MongoDB');
 
   const validatedURI = validateMongoURI(mongoURI);
 
@@ -34,11 +35,11 @@ const connectDB = async (
     });
 
     cachedConnection = { client, db: client.connection };
-    console.log('MongoDB connected successfully');
+    logger.info('MongoDB connected successfully');
     return cachedConnection;
   } catch (err) {
     if (retries > 0) {
-      console.warn(`Connection failed. Retrying... (${retries} attempts left)`);
+      logger.warn(`Connection failed. Retrying... (${retries} attempts left)`);
       await new Promise((resolve) => setTimeout(resolve, 5000));
       return connectDB(validatedURI, retries - 1);
     }
@@ -52,7 +53,7 @@ export const closeConnection = async (): Promise<void> => {
   if (cachedConnection) {
     await cachedConnection.client.disconnect();
     cachedConnection = null;
-    console.log('MongoDB connection closed');
+    logger.info('MongoDB connection closed');
   }
 };
 

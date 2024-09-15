@@ -6,6 +6,7 @@ import configureRoutes from './config/configureRoutes';
 import connectDB from './config/db';
 import { errorHandler, asyncHandler } from './middleware/errorHandling';
 import { Counter } from './models/Counter';
+import { logger } from './middleware/logger';
 
 dotenv.config();
 
@@ -74,10 +75,10 @@ const startServer = async () => {
   try {
     await connectDB(MONGODB_URI);
     app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
+      logger.info(`Server running on port ${PORT}`);
     });
   } catch (err) {
-    console.error('Failed to start server:', err);
+    logger.error('Failed to start server:', err);
     process.exit(1);
   }
 };
