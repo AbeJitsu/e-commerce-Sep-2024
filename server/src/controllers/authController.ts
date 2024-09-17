@@ -1,27 +1,34 @@
 // server/src/controllers/authController.ts
 
 import { Request, Response } from 'express';
+import { Session } from 'express-session';
 import validator from 'validator';
 import { logger } from '../middleware/logger';
 import * as authService from '../services/authService';
 import * as userService from '../services/userService';
 import * as cartService from '../services/cartService';
-import { IUser } from '../models/userModel';
-import { handleError, handleSuccess } from '../utils/responseUtils'; // Adjust the import path as needed
+import { IUser, UserRole } from '../models/userModel';
+import { handleError, handleSuccess } from '../utils/responseUtils';
 
-// Extend the Express Request type
-declare module 'express-serve-static-core' {
-  interface Request {
-    user_id?: string;
-  }
+interface AuthenticatedRequest extends Request {
+  session: Session & { user_id?: string };
+  sessionID: string;
+  user_id?: string;
 }
 
-// Utility function for email and password validation
-const validateEmailAndPassword = (email: string, password: string) => {
-  if (!validator.isEmail(email)) {
+interface AuthRequestBody {
+  email: string;
+  password: string;
+  preferredFirstName?: string;
+}
+
+const validateInput = (
+  input: Partial<AuthRequestBody>
+): { valid: boolean; error?: string } => {
+  if (!input.email || !validator.isEmail(input.email)) {
     return { valid: false, error: 'Invalid email format' };
   }
-  if (password.length < 8) {
+  if (!input.password || input.password.length < 8) {
     return {
       valid: false,
       error: 'Password must be at least 8 characters long',
@@ -30,84 +37,88 @@ const validateEmailAndPassword = (email: string, password: string) => {
   return { valid: true };
 };
 
-interface RegisterRequestBody {
-  email: string;
-  password: string;
-  preferredFirstName: string;
-}
+const handleAuthError = (res: Response, error: any, message: string) => {
+  logger.error(message, { error });
+  handleError(res, error, message);
+};
 
-interface LoginRequestBody {
-  email: string;
-  password: string;
-}
-
-// Register function
-export const register = async (
-  req: Request<{}, {}, RegisterRequestBody>,
-  res: Response
-) => {
-  const { email, password, preferredFirstName } = req.body;
-  const validation = validateEmailAndPassword(email, password);
+export const register = async (req: Request, res: Response) => {
+  const { email, password, preferredFirstName } =
+    req.body as Partial<AuthRequestBody>;
+  const validation = validateInput({ email, password });
   if (!validation.valid) {
-    return res.status(400).json({ error: validation.error });
+    return handleError(
+      res,
+      new Error(validation.error!),
+      validation.error!,
+      400
+    );
   }
 
   try {
-    const existingUser = await userService.getUserByEmail(email);
+    const existingUser: IUser | null = await userService.getUserByEmail(email!);
     if (existingUser) {
-      return res.status(409).json({ error: 'User already exists' });
+      return handleError(
+        res,
+        new Error('User already exists'),
+        'User already exists',
+        409
+      );
     }
 
-    const hashedPassword = await authService.hashPassword(password);
-    await userService.createUser({
-      email,
+    const hashedPassword = await authService.hashPassword(password!);
+    const newUser: IUser = await userService.createUser({
+      email: email!,
       password: hashedPassword,
       preferredFirstName,
     });
 
+    logger.info(`User registered successfully`, { email: newUser.email });
     handleSuccess(res, 'User registered successfully. Please log in.', {}, 201);
   } catch (error) {
-    handleError(res, error as Error, 'An error occurred during registration');
+    handleAuthError(res, error, 'An error occurred during registration');
   }
 };
 
-// Login function
-export const login = async (
-  req: Request<{}, {}, LoginRequestBody>,
-  res: Response
-) => {
-  const { email, password } = req.body;
-  const validation = validateEmailAndPassword(email, password);
+export const login = async (req: Request, res: Response) => {
+  const { email, password } = req.body as Partial<AuthRequestBody>;
+  const validation = validateInput({ email, password });
   if (!validation.valid) {
-    return res.status(400).json({ error: validation.error });
+    return handleError(
+      res,
+      new Error(validation.error!),
+      validation.error!,
+      400
+    );
   }
 
   try {
-    const user = (await userService.getUserByEmail(email)) as IUser | null;
-    if (!user) {
-      return res.status(401).json({ error: 'Invalid email and/or password' });
-    }
-
-    const isPasswordValid = await authService.verifyPassword(
-      password,
-      user.password
-    );
-    if (!isPasswordValid) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+    const user: IUser | null = await userService.getUserByEmail(email!);
+    if (
+      !user ||
+      !(await authService.verifyPassword(password!, user.password))
+    ) {
+      return handleError(
+        res,
+        new Error('Invalid credentials'),
+        'Invalid email and/or password',
+        401
+      );
     }
 
     const token = authService.generateToken({
       _id: user._id.toString(),
       role: user.role,
     });
-    req.session.user_id = user._id.toString();
-    req.user_id = user._id.toString();
+    (req as AuthenticatedRequest).session.user_id = user._id.toString();
+    (req as AuthenticatedRequest).user_id = user._id.toString();
 
     const guestCartConversion = await cartService.convertGuestCartToUserCart(
-      req.sessionID,
+      (req as AuthenticatedRequest).sessionID,
       user._id.toString()
     );
 
+    logger.info(`User logged in successfully`, { userId: user._id });
     handleSuccess(res, 'Login successful', {
       user: {
         _id: user._id.toString(),
@@ -119,81 +130,94 @@ export const login = async (
       guestCartConversion,
     });
   } catch (error) {
-    handleError(res, error as Error, 'An internal error occurred during login');
+    handleAuthError(res, error, 'An internal error occurred during login');
   }
 };
 
-// Logout function
-export const logout = async (req: Request, res: Response) => {
-  try {
-    logger.debug('Logging out user with session ID:', { session: req.session });
-    if (!req.session) {
-      throw new Error('No session found');
-    }
-
-    // Use a type assertion to satisfy TypeScript
-    const destroySession = req.session.destroy as (
-      callback?: (err?: any) => void
-    ) => void;
-
-    destroySession((err) => {
-      if (err) {
-        return handleError(res, err, 'Failed to log out, please try again');
-      }
-      res.clearCookie('connect.sid');
-      handleSuccess(res, 'Logged out successfully');
-    });
-  } catch (error) {
-    handleError(res, error as Error, 'An error occurred during logout');
+export const logout = async (req: AuthenticatedRequest, res: Response) => {
+  logger.debug('Logging out user with session ID:', { session: req.session });
+  if (!req.session) {
+    return handleError(
+      res,
+      new Error('No session found'),
+      'No session found',
+      400
+    );
   }
+
+  req.session.destroy((err: Error | null) => {
+    if (err) {
+      return handleAuthError(res, err, 'Failed to log out, please try again');
+    }
+    res.clearCookie('connect.sid');
+    logger.info(`User logged out successfully`);
+    handleSuccess(res, 'Logged out successfully');
+  });
 };
 
-// Get user profile function
-export const getUserProfile = async (req: Request, res: Response) => {
+export const getUserProfile = async (
+  req: AuthenticatedRequest,
+  res: Response
+) => {
+  if (!req.user_id) {
+    return handleError(
+      res,
+      new Error('User not authenticated'),
+      'User not authenticated',
+      401
+    );
+  }
+
   try {
-    if (!req.user_id) {
-      return res.status(401).json({ error: 'User not authenticated' });
-    }
-
-    logger.debug('Fetching user profile for user_id:', {
-      user_id: req.user_id,
-    });
-
-    const user = (await userService.getUserById(req.user_id)) as IUser | null;
+    const user: IUser | null = await userService.getUserById(req.user_id);
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      return handleError(
+        res,
+        new Error('User not found'),
+        'User not found',
+        404
+      );
     }
 
+    logger.info(`User profile fetched successfully`, { userId: req.user_id });
     handleSuccess(res, 'User profile fetched successfully', {
       preferredFirstName: user.preferredFirstName,
       email: user.email,
       role: user.role,
     });
   } catch (error) {
-    handleError(
+    handleAuthError(
       res,
-      error as Error,
+      error,
       'An internal error occurred during fetching user profile'
     );
   }
 };
 
-// Change user role function
-export const changeUserRole = async (req: Request, res: Response) => {
+export const changeUserRole = async (
+  req: AuthenticatedRequest,
+  res: Response
+) => {
   const { userId, role } = req.body;
-  if (role !== 'user' && role !== 'admin') {
-    return res.status(400).json({ message: 'Invalid role' });
+  if (!Object.values(UserRole).includes(role)) {
+    return handleError(res, new Error('Invalid role'), 'Invalid role', 400);
   }
 
   try {
-    const user = (await userService.getUserById(userId)) as IUser | null;
+    const user: IUser | null = await userService.getUserById(userId);
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return handleError(
+        res,
+        new Error('User not found'),
+        'User not found',
+        404
+      );
     }
     user.role = role;
     await user.save();
+    logger.info(`User role updated successfully`, { userId, newRole: role });
     handleSuccess(res, 'User role updated successfully');
   } catch (error) {
-    handleError(res, error as Error, 'Error updating user role');
+    handleAuthError(res, error, 'Error updating user role');
   }
 };

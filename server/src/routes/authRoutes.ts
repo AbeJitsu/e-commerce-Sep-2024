@@ -6,6 +6,7 @@ import {
   authMiddleware,
   roleMiddleware,
 } from '../middleware/auth/authMiddleware';
+import { UserRole } from '../models/userModel';
 
 const router = express.Router();
 
@@ -111,7 +112,7 @@ router.get('/user', authMiddleware, authController.getUserProfile);
 router.post(
   '/change-role',
   authMiddleware,
-  roleMiddleware(['admin']),
+  roleMiddleware([UserRole.ADMIN]),
   authController.changeUserRole
 );
 
@@ -130,7 +131,7 @@ router.post(
 router.get(
   '/admin',
   authMiddleware,
-  roleMiddleware(['admin']),
+  roleMiddleware([UserRole.ADMIN]),
   (req: Request, res: Response) => {
     res.status(200).json({ message: 'Admin access granted' });
   }

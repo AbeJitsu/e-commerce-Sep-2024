@@ -1,7 +1,6 @@
 // server/src/models/userModel.ts
 
 import mongoose, { Schema, Document, Model } from 'mongoose';
-// import bcrypt from 'bcryptjs';
 
 interface IAddress {
   street: string;
@@ -11,6 +10,12 @@ interface IAddress {
   zip: string;
 }
 
+export enum UserRole {
+  USER = 'user',
+  ADMIN = 'admin',
+  VIP = 'vip',
+}
+
 export interface IUser extends Document {
   _id: mongoose.Types.ObjectId;
   email: string;
@@ -18,8 +23,7 @@ export interface IUser extends Document {
   preferredFirstName: string;
   billingAddress?: IAddress;
   shippingAddress?: IAddress;
-  role: 'user' | 'admin' | 'vip';
-  // comparePassword(candidatePassword: string): Promise<boolean>;
+  role: UserRole;
 }
 
 interface IUserModel extends Model<IUser> {
@@ -46,7 +50,7 @@ const userSchema = new Schema<IUser>({
   preferredFirstName: { type: String, required: true, maxlength: 20 },
   billingAddress: addressSchema,
   shippingAddress: addressSchema,
-  role: { type: String, enum: ['user', 'admin', 'vip'], default: 'user' },
+  role: { type: String, enum: Object.values(UserRole), default: UserRole.USER },
 });
 
 // Pre-save hook to hash the password

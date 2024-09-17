@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { isProduction } from '../utils/envUtils';
+import { UserRole } from '../models/userModel'; // Add this import
 
 const jwtSecret = process.env.SERVER_JWT_SECRET;
 
@@ -16,7 +17,7 @@ const logDebug = (message: string, ...args: any[]) => {
 };
 
 // Function to generate a JWT token
-export const generateToken = (user: { _id: string; role: string }) => {
+export const generateToken = (user: { _id: string; role: UserRole }) => {
   logDebug('Generating token with secret:', jwtSecret);
   return jwt.sign({ id: user._id, role: user.role }, jwtSecret!, {
     expiresIn: '30d',

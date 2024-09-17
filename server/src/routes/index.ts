@@ -2,10 +2,14 @@ import express from 'express';
 import mongoose from 'mongoose';
 import { asyncHandler } from '../middleware/errorHandling';
 import { Counter } from '../models/Counter';
+import authRoutes from './authRoutes'; // Add this line
 
 const router = express.Router();
 
-// Root route
+// Use auth routes
+router.use('/auth', authRoutes);
+
+// Welcome route
 router.get('/', (req, res) => {
   res.json({ message: 'Welcome to EscapeRelaxandBeJeweled API' });
 });

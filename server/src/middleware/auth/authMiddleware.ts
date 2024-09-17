@@ -1,8 +1,8 @@
 // src/middleware/auth/authMiddleware.ts
 
 import { Request, Response, NextFunction } from 'express';
-import { User, IUser } from '../../models/userModel';
-import mongoose from 'mongoose';
+import { User, IUser, UserRole } from '../../models/userModel';
+import { handleError } from '../../utils/responseUtils'; // Import handleError utility
 
 // Extend the Express Request type to include user and user_id
 declare global {
@@ -27,14 +27,19 @@ export const authMiddleware = async (
   next: NextFunction
 ): Promise<void> => {
   if (!req.session || !req.session.user_id) {
-    res.status(401).json({ message: 'User not authenticated' });
+    handleError(
+      res,
+      new Error('User not authenticated'),
+      'User not authenticated',
+      401
+    );
     return;
   }
 
   try {
     const user = await User.findById(req.session.user_id).exec();
     if (!user) {
-      res.status(401).json({ message: 'User not found' });
+      handleError(res, new Error('User not found'), 'User not found', 401);
       return;
     }
 
@@ -42,14 +47,14 @@ export const authMiddleware = async (
     req.user_id = user._id.toString();
     next();
   } catch (error) {
-    res.status(500).json({ message: 'Internal server error' });
+    handleError(res, error as Error, 'Internal server error', 500);
   }
 };
 
-export const roleMiddleware = (roles: string[]) => {
+export const roleMiddleware = (roles: UserRole[]) => {
   return (req: Request, res: Response, next: NextFunction): void => {
     if (!req.user || !roles.includes(req.user.role)) {
-      res.status(403).json({ message: 'Access denied' });
+      handleError(res, new Error('Access denied'), 'Access denied', 403);
       return;
     }
     next();

@@ -7,3 +7,5 @@ defineOptions({
   name: 'App'
 });
 </script>
+
+<!-- client/src/App.vue -->
