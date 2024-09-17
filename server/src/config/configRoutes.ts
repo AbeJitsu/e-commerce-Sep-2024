@@ -1,11 +1,11 @@
 import { Application } from 'express';
 import routes from '../routes/index';
 
-const configureRoutes = (app: Application): void => {
+const configRoutes = (app: Application): void => {
   // Use the main router from routes/index.ts
   app.use('/', routes);
 };
 
-export default configureRoutes;
+export default configRoutes;
 
-// server/src/config/configureRoutes.ts
+// server/src/config/configRoutes.ts

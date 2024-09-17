@@ -3,7 +3,7 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import { attachLogger } from '../middleware/logger';
 
-const configureMiddleware = (app: Application): void => {
+const configMiddleware = (app: Application): void => {
   // Apply logging middleware
   app.use(attachLogger);
 
@@ -36,6 +36,6 @@ const configureMiddleware = (app: Application): void => {
   app.use(morgan('dev'));
 };
 
-export default configureMiddleware;
+export default configMiddleware;
 
-// server/src/config/configureMiddleware.ts
+// server/src/config/configMiddleware.ts

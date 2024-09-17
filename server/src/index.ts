@@ -1,11 +1,9 @@
 import dotenv from 'dotenv';
 import express from 'express';
-import mongoose from 'mongoose';
-import configureMiddleware from './config/configureMiddleware';
-import configureRoutes from './config/configureRoutes';
+import configMiddleware from './config/configMiddleware';
+import configRoutes from './config/configRoutes';
 import connectDB from './config/db';
-import { errorHandler, asyncHandler } from './middleware/errorHandling';
-import { Counter } from './models/Counter';
+import { errorHandler } from './middleware/errorHandling';
 import { logger } from './middleware/logger';
 
 dotenv.config();
@@ -24,48 +22,10 @@ const PORT = parseInt(getEnvVar('PORT', '3000'), 10);
 const MONGODB_URI = getEnvVar('MONGODB_URI');
 
 // Apply middleware configuration
-configureMiddleware(app);
+configMiddleware(app);
 
 // Apply routes configuration
-configureRoutes(app);
-
-// Routes
-app.get('/', (req: express.Request, res: express.Response) => {
-  res.json({ message: 'Welcome to EscapeRelaxandBeJeweled API' });
-});
-
-app.get(
-  '/health',
-  asyncHandler(async (req: express.Request, res: express.Response) => {
-    if (mongoose.connection.readyState !== 1) {
-      res.status(500).json({
-        status: 'error',
-        message: 'Database connection not established',
-      });
-      return;
-    }
-    res.json({
-      status: 'healthy',
-      dbStatus: 'Connected to MongoDB successfully',
-    });
-  })
-);
-
-app.get(
-  '/api/count',
-  asyncHandler(async (req: express.Request, res: express.Response) => {
-    let counter = await Counter.findOne();
-    if (!counter) {
-      counter = new Counter({ value: 0 });
-    }
-    counter.value += 1;
-    await counter.save();
-    res.json({
-      count: counter.value,
-      message: 'Counter updated successfully and saved to the database',
-    });
-  })
-);
+configRoutes(app);
 
 // Apply error handling middleware
 app.use(errorHandler);
