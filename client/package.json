@@ -11,9 +11,9 @@
     "test": "echo \"No test specified\" && exit 0",
     "dev": "quasar dev",
     "build": "quasar build",
-    "tree": "tree -L 9 -I 'node_modules|.git|package-lock.json|dist|.DS_Store|public' --noreport -a",
+    "tree": "clear && tree -L 9 -I 'node_modules|.git|package-lock.json|dist|.DS_Store|public' --noreport -a",
     "git-diff": "git diff --cached --unified=3",
-    "gsd": "git status && echo '\n' && git diff --cached --unified=3 > staged_changes.txt"
+    "gsd": "clear && git status && echo '\n' && git diff --cached --unified=3 > staged_changes.txt"
   },
   "dependencies": {
     "@quasar/extras": "^1.16.4",
