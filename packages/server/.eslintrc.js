@@ -1,13 +1,9 @@
 module.exports = {
+  extends: ['../.eslintrc.js'],
   env: {
     node: true,
-    es2021: true,
-  },
-  extends: ['eslint:recommended'],
-  parserOptions: {
-    ecmaVersion: 12,
   },
   rules: {
-    // Add any specific rules for your server code
+    // Add any server-specific rules here
   },
 };
