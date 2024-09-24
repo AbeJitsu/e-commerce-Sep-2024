@@ -1,0 +1,13 @@
+<!-- client/src/App.vue -->
+
+ <template>
+  <router-view />
+</template>
+
+<script setup lang="ts">
+defineOptions({
+  name: 'App'
+});
+</script>
+
+<!-- client/src/App.vue -->

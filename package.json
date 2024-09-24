@@ -8,11 +8,12 @@
     "heroku-postbuild": "cd server && npm install && npm run build",
     "client": "cd client && npm run dev",
     "server": "cd server && npm run dev",
-    "dev": "concurrently \"npm run server\" \"wait-on http://localhost:3000 && npm run client\"",
+    "dev": "concurrently \"npm run server\" \"wait-on http://localhost:3001 && npm run client\"",
     "install:all": "npm install && cd client && npm install && cd ../server && npm install",
     "tree": "clear && tree -L 9 -I 'node_modules|.git|package-lock.json|dist|.DS_Store|public' --noreport -a",
+    "tree2": "clear && tree -L 2 -I 'node_modules|.git|package-lock.json|dist|.DS_Store|public' --noreport -a",
     "gsd": "clear && git status && echo '\n' && git diff --cached --unified=3 > staged_changes.txt",
-    "wc": "clear && find . -type f \\( -name \"*.js\" -o -name \"*.ts\" -o -name \"*.vue\" -o -name \"*.json\" -o -name \"*.md\" -o -name \"*.scss\" -o -name \"*.html\" \\) -not -path \"*/node_modules/*\" -not -path \"*/.git/*\" -not -path \"*/dist/*\" -print0 | xargs -0 wc -w | sort -nr"
+    "wc": "clear && find . -type f \\( -name \"*.js\" -o -name \"*.ts\" -o -name \"*.vue\" -o -name \"*.json\" -o -name \"*.md\" -o -name \"*.scss\" -o -name \"*.html\" \\) -not -name \"package-lock.json\" -not -path \"*/node_modules/*\" -not -path \"*/.git/*\" -not -path \"*/dist/*\" -print0 | xargs -0 wc -w | sort -nr"
   },
   "keywords": [
     "monorepo",

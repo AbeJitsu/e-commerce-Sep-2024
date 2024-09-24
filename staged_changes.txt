@@ -1,0 +1,92 @@
+diff --git a/client/quasar.config.js b/client/quasar.config.js
+index be47487..94b0d61 100644
+--- a/client/quasar.config.js
++++ b/client/quasar.config.js
+@@ -35,7 +35,7 @@ module.exports = configure(function (/* ctx */) {
+       open: true,
+       proxy: {
+         '/api': {
+-          target: process.env.VITE_API_URL || 'http://localhost:3000',
++          target: process.env.VITE_API_URL || 'http://localhost:3001',
+           changeOrigin: true,
+           pathRewrite: { '^/api': '' },
+         },
+@@ -51,7 +51,7 @@ module.exports = configure(function (/* ctx */) {
+ 
+     ssr: {
+       pwa: true, // Enable PWA takeover
+-      prodPort: 3000, // Port for production server
++      prodPort: 3001, // Port for production server
+       middlewares: ['render'], // Specify middlewares
+     },
+ 
+diff --git a/client/src/App.vue b/client/src/App.vue
+index 3a6a837..5dc9d78 100644
+--- a/client/src/App.vue
++++ b/client/src/App.vue
+@@ -1,4 +1,6 @@
+-<template>
++<!-- client/src/App.vue -->
++
++ <template>
+   <router-view />
+ </template>
+ 
+diff --git a/client/src/boot/axios.ts b/client/src/boot/axios.ts
+index c3358ad..2f366d1 100644
+--- a/client/src/boot/axios.ts
++++ b/client/src/boot/axios.ts
+@@ -16,7 +16,7 @@ declare module '@vue/runtime-core' {
+ // for each client)
+ 
+ const api = axios.create({
+-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000',
++  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3001',
+   timeout: 5000,
+ });
+ 
+diff --git a/package.json b/package.json
+index a73bb1d..bd26542 100644
+--- a/package.json
++++ b/package.json
+@@ -8,11 +8,12 @@
+     "heroku-postbuild": "cd server && npm install && npm run build",
+     "client": "cd client && npm run dev",
+     "server": "cd server && npm run dev",
+-    "dev": "concurrently \"npm run server\" \"wait-on http://localhost:3000 && npm run client\"",
++    "dev": "concurrently \"npm run server\" \"wait-on http://localhost:3001 && npm run client\"",
+     "install:all": "npm install && cd client && npm install && cd ../server && npm install",
+     "tree": "clear && tree -L 9 -I 'node_modules|.git|package-lock.json|dist|.DS_Store|public' --noreport -a",
++    "tree2": "clear && tree -L 2 -I 'node_modules|.git|package-lock.json|dist|.DS_Store|public' --noreport -a",
+     "gsd": "clear && git status && echo '\n' && git diff --cached --unified=3 > staged_changes.txt",
+-    "wc": "clear && find . -type f \\( -name \"*.js\" -o -name \"*.ts\" -o -name \"*.vue\" -o -name \"*.json\" -o -name \"*.md\" -o -name \"*.scss\" -o -name \"*.html\" \\) -not -path \"*/node_modules/*\" -not -path \"*/.git/*\" -not -path \"*/dist/*\" -print0 | xargs -0 wc -w | sort -nr"
++    "wc": "clear && find . -type f \\( -name \"*.js\" -o -name \"*.ts\" -o -name \"*.vue\" -o -name \"*.json\" -o -name \"*.md\" -o -name \"*.scss\" -o -name \"*.html\" \\) -not -name \"package-lock.json\" -not -path \"*/node_modules/*\" -not -path \"*/.git/*\" -not -path \"*/dist/*\" -print0 | xargs -0 wc -w | sort -nr"
+   },
+   "keywords": [
+     "monorepo",
+diff --git a/server/src/index.ts b/server/src/index.ts
+index a0698e1..ae57b30 100644
+--- a/server/src/index.ts
++++ b/server/src/index.ts
+@@ -18,7 +18,7 @@ const getEnvVar = (key: string, defaultValue?: string): string => {
+   return value;
+ };
+ 
+-const PORT = parseInt(getEnvVar('PORT', '3000'), 10);
++const PORT = parseInt(getEnvVar('PORT', '3001'), 10);
+ const MONGODB_URI = getEnvVar('MONGODB_URI');
+ 
+ // Apply middleware configuration
+diff --git a/server/src/utils/envUtils.ts b/server/src/utils/envUtils.ts
+index db5b0e7..26c64a4 100644
+--- a/server/src/utils/envUtils.ts
++++ b/server/src/utils/envUtils.ts
+@@ -37,7 +37,7 @@ const toNumber = (value: EnvVar, defaultValue?: number): number => {
+ };
+ 
+ export const NODE_ENV = getEnvVar('NODE_ENV');
+-export const PORT = toNumber(getEnvVar('PORT'), 3000);
++export const PORT = toNumber(getEnvVar('PORT'), 3001);
+ 
+ export const isProduction = (): boolean => NODE_ENV === 'production';
+ 
