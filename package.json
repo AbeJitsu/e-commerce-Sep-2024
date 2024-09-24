@@ -2,14 +2,20 @@
   "name": "e-commerce-sep-2024-monorepo",
   "version": "1.0.0",
   "description": "Monorepo for e-commerce jewelry website",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
-    "start": "cd server && npm start",
-    "build": "cd server && npm run build",
-    "heroku-postbuild": "cd server && npm install && npm run build",
-    "client": "cd client && npm run dev",
-    "server": "cd server && npm run dev",
-    "dev": "concurrently \"npm run server\" \"wait-on http://localhost:3001 && npm run client\"",
-    "install:all": "npm install && cd client && npm install && cd ../server && npm install",
+    "start": "cd packages/server && npm start",
+    "build": "cd packages/server && npm run build",
+    "heroku-postbuild": "cd packages/server && npm install && npm run build",
+    "client": "cd packages/client && npm run dev",
+    "server": "cd packages/server && npm run dev",
+    "dev:concurrent": "concurrently \"turbo run dev --filter=server\" \"wait-on http://localhost:3001 && turbo run dev --filter=client\"",
+    "install:all": "npm install && cd packages/client && npm install && cd ../server && npm install",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
     "tree": "clear && tree -L 9 -I 'node_modules|.git|package-lock.json|dist|.DS_Store|public' --noreport -a",
     "tree2": "clear && tree -L 2 -I 'node_modules|.git|package-lock.json|dist|.DS_Store|public' --noreport -a",
     "gsd": "clear && git status && echo '\n' && git diff --cached --unified=3 > staged_changes.txt",
@@ -26,7 +32,8 @@
     "concurrently": "^6.2.0",
     "cypress": "^13.14.1",
     "eslint": "^9.9.1",
-    "wait-on": "^8.0.0"
+    "wait-on": "^8.0.0",
+    "turbo": "^1.10.0"
   },
   "engines": {
     "node": "20.x"
