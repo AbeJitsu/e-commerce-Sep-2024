@@ -13,14 +13,15 @@
     "client": "cd packages/client && npm run dev",
     "server": "cd packages/server && npm run dev",
     "dev:concurrent": "concurrently \"turbo run dev --filter=server\" \"wait-on http://localhost:3001 && turbo run dev --filter=client\"",
-    "install:all": "npm install && cd packages/client && npm install && cd ../server && npm install",
+    "install:all": "NODE_ENV=development npm install && cd packages/client && npm install && cd ../server && npm install",
     "lint": "turbo run lint",
     "test": "turbo run test",
     "tree": "clear && tree -L 9 -I 'node_modules|.git|package-lock.json|dist|.DS_Store|public' --noreport -a",
     "tree2": "clear && tree -L 2 -I 'node_modules|.git|package-lock.json|dist|.DS_Store|public' --noreport -a",
     "tree-wc": "python3 scripts/tree_word_count.py",
     "gsd": "clear && git status && echo '\n' && git diff --cached --unified=3 > staged_changes.txt",
-    "wc": "clear && find . -type f \\( -name \"*.js\" -o -name \"*.ts\" -o -name \"*.vue\" -o -name \"*.json\" -o -name \"*.md\" -o -name \"*.scss\" -o -name \"*.html\" \\) -not -name \"package-lock.json\" -not -path \"*/node_modules/*\" -not -path \"*/.git/*\" -not -path \"*/dist/*\" -print0 | xargs -0 wc -w | sort -nr"
+    "wc": "clear && find . -type f \\( -name \"*.js\" -o -name \"*.ts\" -o -name \"*.vue\" -o -name \"*.json\" -o -name \"*.md\" -o -name \"*.scss\" -o -name \"*.html\" \\) -not -name \"package-lock.json\" -not -path \"*/node_modules/*\" -not -path \"*/.git/*\" -not -path \"*/dist/*\" -print0 | xargs -0 wc -w | sort -nr",
+    "build:server": "cd packages/server && npm run build"
   },
   "keywords": [
     "monorepo",
