@@ -18,6 +18,7 @@
     "test": "turbo run test",
     "tree": "clear && tree -L 9 -I 'node_modules|.git|package-lock.json|dist|.DS_Store|public' --noreport -a",
     "tree2": "clear && tree -L 2 -I 'node_modules|.git|package-lock.json|dist|.DS_Store|public' --noreport -a",
+    "tree-wc": "python3 scripts/tree_word_count.py",
     "gsd": "clear && git status && echo '\n' && git diff --cached --unified=3 > staged_changes.txt",
     "wc": "clear && find . -type f \\( -name \"*.js\" -o -name \"*.ts\" -o -name \"*.vue\" -o -name \"*.json\" -o -name \"*.md\" -o -name \"*.scss\" -o -name \"*.html\" \\) -not -name \"package-lock.json\" -not -path \"*/node_modules/*\" -not -path \"*/.git/*\" -not -path \"*/dist/*\" -print0 | xargs -0 wc -w | sort -nr"
   },
