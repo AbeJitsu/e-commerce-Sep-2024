@@ -1,0 +1,32 @@
+File: ./node_modules/wait-on/.prettierrc.js
+module.exports = {
+  tabWidth: 2,
+  singleQuote: true,
+  printWidth: 120,
+  trailingComma: 'none',
+};
+
+
+File: ./node_modules/nodemon/.prettierrc.json
+{
+  "singleQuote": true
+}
+
+
+File: ./.prettierrc.js
+
+
+File: ./packages/server/.prettierrc
+{
+  "singleQuote": true,
+  "semi": true
+}
+
+
+File: ./packages/client/.prettierrc
+{
+  "singleQuote": true,
+  "semi": true
+}
+
+
